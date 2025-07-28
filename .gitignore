@@ -1,0 +1,33 @@
+# Documentation
+sprint-1-admin-documentation.md
+user-stories.md
+
+# Dependencies
+node_modules/
+backend/node_modules/
+db/node_modules/
+
+# Environment variables
+.env
+backend/.env
+db/.env
+env.example
+backend/env.example
+
+# Prisma
+db/generated/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Misc
+.DS_Store
+dist
+build
+.npm
+.eslintcache 
