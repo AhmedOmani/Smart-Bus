@@ -12,7 +12,7 @@ export const authenticationMiddleware = async (req , res, next) => {
             throw new AuthenticationError("User not authenticated");
         }
         
-        const blackListedToken = await client.blacklistedToken.findUnique({
+        const blackListedToken = await client.blackListedToken.findUnique({
             where: {token}
         });
 

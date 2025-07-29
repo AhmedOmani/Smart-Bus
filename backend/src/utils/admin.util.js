@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
  * If we failed for this case we have to generate a fallback username which is less friendly
 */
 export const generateUsername = async (name) => {
+    console.log(name);
     const base = name.toLowerCase().replace(/\s+/g, "");
     let username = base ;
     let suffix = 0;

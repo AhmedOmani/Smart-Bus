@@ -7,10 +7,11 @@ import { JWT_SECRET } from "../config/env.js";
 import userRepository from "../repositories/user.repository.js";
 
 const login = asyncHandler(async (req, res) => {
-    const {username , password} = req.validatedData;
+    
+    const { username, password } = req.validatedData;    
 
     const existingUser = await userRepository.findUserByUsername(username);
-
+    
     if (!existingUser || existingUser.status !== "ACTIVE") {
         throw new AuthenticationError("User not found");
     }
@@ -37,15 +38,15 @@ const login = asyncHandler(async (req, res) => {
     }, "Login successful");
 });
 
-const logout = asyncHandler(async(req , res) => {
-        
+const logout = asyncHandler(async(req , res) => {     
     const token = req.headers["authorization"]?.split(" ")[1];
-    
+    console.log(token);
     if (!token) {
         throw new AuthenticationError("Token is required");
     }
+    console.log(req.user.id);
 
-    await userRepository.updateUserLogout(req.user.id , token)
+    await userRepository.updateUserLogout(req.user.id , token); 
 
     return successResponse(res, null, "Logged out successfully");
 });
@@ -56,7 +57,7 @@ const getCurrentUser = asyncHandler(async (req , res) => {
 });
 
 const changePassword = asyncHandler(async (req , res) => {
-    const {currentPassword , newPassword} = req.validatedData;
+    const { currentPassword, newPassword } = req.validatedData;
 
     const user = await userRepository.findUserById(req.user.id);
 

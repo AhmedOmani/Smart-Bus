@@ -1,8 +1,7 @@
 import { client } from "../config/db.js"
 
-const findUsers = (where) => {
-    return client.user.findMany({
-        where,
+const findUsers = async () => {
+    return await client.user.findMany({
         select: {
             id: true,
             name: true,
@@ -53,7 +52,7 @@ const findUserById = async(id) => {
 
 const updateUserLogout = async (id , token) => {
     await client.$transaction(async (tx) => { 
-        await tx.blacklistedToken.create({
+        await tx.blackListedToken.create({
             data: {
                 token,
                 expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -104,5 +103,7 @@ export default {
     updateUserLogout,
     updateUserLogin,
     findUserById,
-    updateUserPassword
+    updateUserPassword,
+    updateUser,
+    deleteUser
 }

@@ -1,4 +1,4 @@
-export class AppError extends Error {
+export class ApiError extends Error {
     constructor(message , statusCode , errorCode) {
         super(message);
         this.statusCode = statusCode;
@@ -9,31 +9,31 @@ export class AppError extends Error {
     }
 }
 
-export class ValidationError extends AppError {
+export class ValidationError extends ApiError {
     constructor(message) {
         super(message, 400, 'VALIDATION_ERROR');
     }
 }
 
-export class AuthenticationError extends AppError {
+export class AuthenticationError extends ApiError {
     constructor(message) {
         super(message, 401, 'AUTHENTICATION_ERROR');
     }
 }
 
-export class AuthorizationError extends AppError {
+export class AuthorizationError extends ApiError {
     constructor(message) {
         super(message, 403, 'AUTHORIZATION_ERROR');
     }
 }
 
-export class NotFoundError extends AppError {
+export class NotFoundError extends ApiError {
     constructor(resource) {
         super(`${resource} not found`, 404, 'NOT_FOUND');
     }
 }
 
-export class DatabaseError extends AppError {
+export class DatabaseError extends ApiError {
     constructor(message) {
         super(message, 500, 'DATABASE_ERROR');
     }

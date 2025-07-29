@@ -29,7 +29,7 @@ adminRoutes.use(authenticationMiddleware , adminMiddleware);
 adminRoutes.get("/dashboard" , adminController.getAdminDashboard);
 
 // User Management
-adminRoutes.get("/users" , validateRequest(userQuerySchema)  , adminController.getUsers);
+adminRoutes.get("/users" , adminController.getUsers);
 adminRoutes.post("/users" , validateRequest(createUserSchema) , adminController.createUser);
 adminRoutes.put("/users/:id", validateRequest(updateUserSchema), adminController.updateUser);
 adminRoutes.delete("/users/:id", adminController.deleteUser);

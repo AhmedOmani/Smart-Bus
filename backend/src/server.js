@@ -19,7 +19,6 @@ import { rateLimitMiddleware } from "./middlewares/ratelimit.middleware.js";
 import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 
-
 const app = express();
 
 app.use((req, res, next) => {

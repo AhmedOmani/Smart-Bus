@@ -6,7 +6,7 @@ import { validateRequest , loginSchema , changePasswordSchema} from "../utils/va
 const authRoutes = express.Router();
 
 authRoutes.post("/login" , validateRequest(loginSchema) , authController.login);
-authRoutes.post("/logout" , authController.logout);
+authRoutes.post("/logout" , authenticationMiddleware , authController.logout);
 authRoutes.get("/me" , authenticationMiddleware , authController.getCurrentUser);
 authRoutes.post("/change-password" , authenticationMiddleware , validateRequest(changePasswordSchema) , authController.changePassword);
 
