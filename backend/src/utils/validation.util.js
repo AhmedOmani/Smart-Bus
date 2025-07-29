@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-// ========================================
 // AUTHENTICATION VALIDATION
-// ========================================
 
 export const loginSchema = z.object({
     username: z.string()
@@ -26,70 +24,74 @@ export const changePasswordSchema = z.object({
         )
 });
 
-// ========================================
+
 // USER MANAGEMENT VALIDATION
-// ========================================
 
 export const createUserSchema = z.object({
-    name: z.string()
-        .min(3, "Name must be at least 3 characters")
-        .max(100, "Name must be less than 100 characters")
-        .refine(
-            (name) => /^[a-zA-Z\s]+$/.test(name),
-            "Name can only contain letters and spaces"
-        )
-        .trim(),
-    email: z.string()
-        .email("Invalid email format")
-        .max(100, "Email must be less than 100 characters")
-        .toLowerCase()
-        .trim(),
-    phone: z.string()
-        .refine(
-            (phone) => /^[0-9+\-\s()]+$/.test(phone),
-            "Invalid phone number format"
-        )
-        .min(10, "Phone number must be at least 10 digits")
-        .max(20, "Phone number must be less than 20 digits")
-        .optional(),
-    role: z.enum(["ADMIN", "PARENT", "SUPERVISOR"], {
-        errorMap: () => ({ message: "Role must be ADMIN, PARENT, or SUPERVISOR" })
+    body: z.object({
+        name: z.string()
+            .min(3, "Name must be at least 3 characters")
+            .max(100, "Name must be less than 100 characters")
+            .refine(
+                (name) => /^[a-zA-Z\s]+$/.test(name),
+                "Name can only contain letters and spaces"
+            )
+            .trim(),
+        email: z.string()
+            .email("Invalid email format")
+            .max(100, "Email must be less than 100 characters")
+            .toLowerCase()
+            .trim(),
+        phone: z.string()
+            .refine(
+                (phone) => /^[0-9+\-\s()]+$/.test(phone),
+                "Invalid phone number format"
+            )
+            .min(10, "Phone number must be at least 10 digits")
+            .max(20, "Phone number must be less than 20 digits")
+            .optional(),
+        role: z.enum(["PARENT", "SUPERVISOR"], {
+            errorMap: () => ({ message: "Role must be PARENT, or SUPERVISOR" })
+        })
     })
 });
 
 export const updateUserSchema = z.object({
-    name: z.string()
-        .min(3, "Name must be at least 3 characters")
-        .max(100, "Name must be less than 100 characters")
-        .refine(
-            (name) => /^[a-zA-Z\s]+$/.test(name),
-            "Name can only contain letters and spaces"
-        )
-        .trim()
-        .optional(),
-    email: z.string()
-        .email("Invalid email format")
-        .max(100, "Email must be less than 100 characters")
-        .toLowerCase()
-        .trim()
-        .optional(),
-    phone: z.string()
-        .refine(
-            (phone) => /^[0-9+\-\s()]+$/.test(phone),
-            "Invalid phone number format"
-        )
-        .min(10, "Phone number must be at least 10 digits")
-        .max(20, "Phone number must be less than 20 digits")
-        .optional(),
-    status: z.enum(["ACTIVE", "INACTIVE"], {
-        errorMap: () => ({ message: "Status must be ACTIVE or INACTIVE" })
-    }).optional()
+    body: z.object({
+        name: z.string()
+            .min(3, "Name must be at least 3 characters")
+            .max(100, "Name must be less than 100 characters")
+            .refine(
+                (name) => /^[a-zA-Z\s]+$/.test(name),
+                "Name can only contain letters and spaces"
+            )
+            .trim()
+            .optional(),
+        email: z.string()
+            .email("Invalid email format")
+            .max(100, "Email must be less than 100 characters")
+            .toLowerCase()
+            .trim()
+            .optional(),
+        phone: z.string()
+            .refine(
+                (phone) => /^[0-9+\-\s()]+$/.test(phone),
+                "Invalid phone number format"
+            )
+            .min(10, "Phone number must be at least 10 digits")
+            .max(20, "Phone number must be less than 20 digits")
+            .optional(),
+        status: z.enum(["ACTIVE", "INACTIVE"], {
+            errorMap: () => ({ message: "Status must be ACTIVE or INACTIVE" })
+        }).optional()
+    }).partial(),
+    params: z.object({
+        id: z.string().uuid({ message: "Invalid user ID" }),
+    }),
 });
 
-// ========================================
-// QUERY PARAMETER VALIDATION
-// ========================================
 
+// QUERY PARAMETER VALIDATION
 export const userQuerySchema = z.object({
     role: z.enum(["ADMIN", "PARENT", "SUPERVISOR"]).optional(),
     status: z.enum(["ACTIVE", "INACTIVE"]).optional(),
@@ -99,10 +101,8 @@ export const userQuerySchema = z.object({
         .optional()
 });
 
-// ========================================
-// STUDENT MANAGEMENT VALIDATION
-// ========================================
 
+// STUDENT MANAGEMENT VALIDATION
 export const createStudentSchema = z.object({
     name: z.string()
         .min(3, "Student name must be at least 3 characters")
@@ -118,10 +118,8 @@ export const createStudentSchema = z.object({
         .uuid("Invalid bus ID format")
 });
 
-// ========================================
-// BUS MANAGEMENT VALIDATION
-// ========================================
 
+// BUS MANAGEMENT VALIDATION
 export const createBusSchema = z.object({
     name: z.string()
         .min(3, "Bus name must be at least 3 characters")

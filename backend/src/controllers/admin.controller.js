@@ -1,11 +1,13 @@
-import{ client } from "../config/db.js";
+import { client } from "../config/db.js";
 import bcrypt from "bcrypt";
-import { generateUsername , generatePassword } from "../utils/admin.util.js";
+import { generateUsername, generatePassword } from "../utils/admin.util.js";
 import { asyncHandler } from "../utils/asyncHandler.util.js";
 import { successResponse } from "../utils/response.util.js";
+import { NotFoundError } from "../utils/errors.util.js";
+import userRepository from "../repositories/user.repository.js";
 
 const getAdminDashboard = asyncHandler(async (req, res) => {
-    const [users , students , activeBuses ] = await Promise.all([
+    const [users, students, activeBuses] = await Promise.all([
         client.user.count(),
         client.student.count(),
         client.bus.count({ where: { status: "ACTIVE" }})
@@ -51,7 +53,7 @@ const getUsers = asyncHandler(async (req, res) => {
 
 const createUser = asyncHandler(async (req, res) => {
     const { name, email, phone, role } = req.validatedData;
-    
+
     const username = await generateUsername(name);
     const password = generatePassword();
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -78,8 +80,41 @@ const createUser = asyncHandler(async (req, res) => {
     }, "User created successfully", 201);
 });
 
+const updateUser = asyncHandler(async (req, res) => {
+    const { id } = req.validatedData.params;
+    const updateData = req.validatedData.body;
+
+    if (Object.keys(updateData).length === 0) {
+        return successResponse(res, null, "No update data provided.");
+    }
+
+    const user = await userRepository.findUserById(id);
+    if (!user) {    
+        throw new NotFoundError("User not found");
+    }
+
+    const updatedUser = await userRepository.updateUser(id , updateData);
+
+    return successResponse(res, { user: updatedUser }, "User updated successfully");
+});
+
+const deleteUser = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const user = await userRepository.findUserById(id);
+    if (!user) {
+        throw new NotFoundError("User not found");
+    }
+
+    await userRepository.deleteUser(id);
+
+    return successResponse(res, null, "User deleted successfully", 204);
+});
+
 export default {
     getAdminDashboard,
     getUsers,
-    createUser
+    createUser,
+    updateUser,
+    deleteUser
 };

@@ -18,8 +18,8 @@
 
 import express from "express";
 import adminController from "../controllers/admin.controller.js";
-import { authenticationMiddleware , adminMiddleware } from "../middleware/auth.middleware.js";
-import { validateRequest , userQuerySchema , createUserSchema } from "../utils/validation.util.js";
+import { authenticationMiddleware , adminMiddleware } from "../middlewares/auth.middleware.js";
+import { validateRequest , userQuerySchema , createUserSchema , updateUserSchema } from "../utils/validation.util.js";
 
 const adminRoutes = express.Router();
 
@@ -31,5 +31,6 @@ adminRoutes.get("/dashboard" , adminController.getAdminDashboard);
 // User Management
 adminRoutes.get("/users" , validateRequest(userQuerySchema)  , adminController.getUsers);
 adminRoutes.post("/users" , validateRequest(createUserSchema) , adminController.createUser);
-
+adminRoutes.put("/users/:id", validateRequest(updateUserSchema), adminController.updateUser);
+adminRoutes.delete("/users/:id", adminController.deleteUser);
 export default adminRoutes;

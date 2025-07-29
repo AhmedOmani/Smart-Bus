@@ -12,8 +12,8 @@ import { corsOptions } from "./config/cors.js";
 import { specs } from "./config/swagger.js";
 
 // Middlewares
-import { globalErrorHandler } from "./middleware/error.middleware.js";
-import { rateLimitMiddleware } from "./middleware/ratelimit.middleware.js";
+import { globalErrorHandler } from "./middlewares/error.middleware.js";
+import { rateLimitMiddleware } from "./middlewares/ratelimit.middleware.js";
 
 // Routes
 import adminRoutes from "./routes/admin.routes.js";

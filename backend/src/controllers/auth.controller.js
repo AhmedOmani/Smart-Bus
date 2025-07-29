@@ -1,17 +1,15 @@
 import { asyncHandler } from "../utils/asyncHandler.util.js";
 import { successResponse } from "../utils/response.util.js";
-import { client } from "../config/db.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcrypt";        
 import jwt from "jsonwebtoken";
 import { AuthenticationError , NotFoundError } from "../utils/errors.util.js";
 import { JWT_SECRET } from "../config/env.js";
+import userRepository from "../repositories/user.repository.js";
 
 const login = asyncHandler(async (req, res) => {
     const {username , password} = req.validatedData;
 
-    const existingUser = await client.user.findUnique({
-        where: { username }
-    }); 
+    const existingUser = await userRepository.findUserByUsername(username);
 
     if (!existingUser || existingUser.status !== "ACTIVE") {
         throw new AuthenticationError("User not found");
@@ -23,10 +21,7 @@ const login = asyncHandler(async (req, res) => {
         throw new AuthenticationError("Invalid username or password");
     }
 
-    await client.user.update({
-        where: {id: existingUser.id},
-        data: {lastLoginAt: new Date()}
-    })
+    await userRepository.updateUserLogin(existingUser.id, {lastLoginAt: new Date()});
 
     const token = jwt.sign({userId: existingUser.id, role: existingUser.role}, JWT_SECRET,  {expiresIn: "12h"});
 
@@ -50,49 +45,20 @@ const logout = asyncHandler(async(req , res) => {
         throw new AuthenticationError("Token is required");
     }
 
-    await client.$transaction(async (tx) => { 
-        
-        await tx.blacklistedToken.create({
-            data: {
-                token,
-                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-            }
-        });
-
-        if (req.user?.id) {
-            await tx.user.update({
-                where: {id: req.user.id} ,
-                data: { lastLogoutAt: new Date()}
-            });
-        }
-    });
+    await userRepository.updateUserLogout(req.user.id , token)
 
     return successResponse(res, null, "Logged out successfully");
 });
 
 const getCurrentUser = asyncHandler(async (req , res) => {
-    const user = await client.user.findUnique({
-        where: {id: req.user.id},
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            role: true,
-            username: true,
-            status: true,
-            createdAt: true
-        }
-    });
+    const user = await userRepository.findUserById(req.user.id);
     return successResponse(res, {user} , "User fetched sucessfully");
 });
 
 const changePassword = asyncHandler(async (req , res) => {
     const {currentPassword , newPassword} = req.validatedData;
 
-    const user = await client.user.findUnique({
-        where: {id: req.user.id}
-    });
+    const user = await userRepository.findUserById(req.user.id);
 
     if (!user) {
         throw new NotFoundError("User not found");
@@ -105,10 +71,7 @@ const changePassword = asyncHandler(async (req , res) => {
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-    await client.user.update({
-        where: {id: req.user.id},
-        data: {password: hashedNewPassword}
-    });
+    await userRepository.updateUserPassword(req.user.id , hashedNewPassword);
 
     return successResponse(res, null, "Password changed successfully");
 });
@@ -117,5 +80,5 @@ export default {
     login,
     logout,
     getCurrentUser,
-    changePassword
+    changePassword      
 }
