@@ -12,11 +12,13 @@ const genarateAdmin = async () => {
         update: {},
         create: {
             name: "Abeer" ,
+            nationalId: "1234567890",
             email: "alahd@gmail.com",
             role: "ADMIN",
             username: "abeer",
             password: hashedPassword,
-            status: "ACTIVE"
+            phone: "991778333",
+            status: "ACTIVE",
         }
     });
 

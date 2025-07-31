@@ -49,3 +49,16 @@ export const adminMiddleware = async (req , res , next) => {
     }
     next();
 }
+
+export const parentMiddleware = async (req , res , next) => {
+    if (req.user.role !== "PARENT") {
+        throw new AuthorizationError("Access denied, only parent can access this resource");
+    }
+    next();
+}
+
+export const supervisorMiddleware = async (req , res , next) => {
+    if (req.user.role !== "SUPERVISOR") {
+        throw new AuthorizationError("Access denied, only supervisor can access this resource");
+    }
+}

@@ -3,8 +3,9 @@ import bcrypt from "bcrypt";
 import { generateUsername, generatePassword } from "../utils/admin.util.js";
 import { asyncHandler } from "../utils/asyncHandler.util.js";
 import { successResponse } from "../utils/response.util.js";
-import { NotFoundError } from "../utils/errors.util.js";
+import { ApiError, NotFoundError } from "../utils/errors.util.js";
 import userRepository from "../repositories/user.repository.js";
+import studentRepository from "../repositories/student.repository.js";
 
 const getAdminDashboard = asyncHandler(async (req, res) => {
     const [users, students, activeBuses] = await Promise.all([
@@ -16,14 +17,14 @@ const getAdminDashboard = asyncHandler(async (req, res) => {
     return successResponse(res, { totalUsers: users, totalStudents: students, activeBuses: activeBuses }, "Dashboard data fetched successfully");
 });
 
+//User Management
 const getUsers = asyncHandler(async (req, res) => {
     const users = await userRepository.findUsers();
     return successResponse(res, { users }, "Users fetched successfully" , 200);
 });
-
 const getUsersBySearch = asyncHandler(async (req, res) => {
-    const { role, status, search } = req.validatedData;
-
+    const { role, status, search } = req.query;
+    console.log(req.query);
     const where = {};
     if (role) where.role = role;
     if (status) where.status = status;
@@ -35,59 +36,37 @@ const getUsersBySearch = asyncHandler(async (req, res) => {
             { username: { contains: sanitizedSearch, mode: "insensitive" } }
         ];
     }
-
-    const users = await client.user.findMany({
-        where,
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            role: true,
-            username: true,
-            status: true,
-            createdAt: true,
-            students: { select: { id: true, name: true } },
-            buses: { select: { id: true, name: true } }
-        },
-        orderBy: { name: "asc" }
-    });
-
+        
+    const users = await userRepository.findUserBySearch(where);
     return successResponse(res, { users }, "Users fetched successfully");
 });
-
 const createUser = asyncHandler(async (req, res) => {
-    const { name, email, phone, role } = req.validatedData;
+    const { nationalId , name, email, phone, role  } = req.validatedData;
 
     const username = await generateUsername(name);
     const password = generatePassword();
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const transaction = await client.$transaction(async (tx) => {
-        const user = await tx.user.create({
-            data: { name, email, phone, role, username, password: hashedPassword }
-        });
-
-        await tx.credential.create({
-            data: { userId: user.id, username, password }
-        });
-
-        return user;
-    })
+    const user = await userRepository.createUser({ nationalId, name, email, phone, role, username, password, hashedPassword });
 
     return successResponse(res, {
-        id: transaction.id,
-        name: transaction.name,
-        email: transaction.email,
-        role: transaction.role,
-        username,
-        password
+        user: {
+            id: user.id,
+            nationalId: user.nationalId,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            username,
+        },
+        credentials: {
+            username,
+            password
+        }
     }, "User created successfully", 201);
 });
-
 const updateUser = asyncHandler(async (req, res) => {
     const id = req.params.id;
-    const updateData = req.validatedData;
+    const updateData = req.validatedData.body;
 
     if (Object.keys(updateData).length === 0) {
         return successResponse(res, null, "No update data provided.");
@@ -98,14 +77,10 @@ const updateUser = asyncHandler(async (req, res) => {
         throw new NotFoundError("User not found");
     }
 
-    const updatedUser = await client.user.update({
-        where: { id },
-        data: updateData
-    });
+    const updatedUser = await userRepository.updateUser(id, updateData);
 
     return successResponse(res, { user: updatedUser }, "User updated successfully");
 });
-
 const deleteUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
 
@@ -114,12 +89,55 @@ const deleteUser = asyncHandler(async (req, res) => {
         throw new NotFoundError("User not found");
     }
 
-    await client.user.delete({
-        where: { id }
-    });
+    await userRepository.deleteUser(id);
 
     return successResponse(res, null, "User deleted successfully", 204);
 });
+
+// Student Management
+const getStudents = asyncHandler(async (req, res) => {
+    const students = await studentRepository.findStudents();
+    return successResponse(res, { students }, "Students fetched successfully");
+});
+
+const createStudent = asyncHandler(async (req, res) => {
+    const studentData = req.validatedData;
+
+    // Verify parent exists
+    const parent = await client.parent.findUnique({ where: { id: studentData.parentId } });
+    if (!parent) {
+        throw new ApiError("The selected parent does not exist.", 400, "VALIDATION_ERROR");
+    }
+
+    const newStudent = await studentRepository.createStudent(studentData);
+    return successResponse(res, { student: newStudent }, "Student created successfully", 201);
+});
+
+const updateStudent = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const studentData = req.validatedData;
+
+    const student = await studentRepository.findStudentById(id);
+    if (!student) {
+        throw new NotFoundError("Student not found");
+    }
+
+    const updatedStudent = await studentRepository.updateStudent(id, studentData);
+    return successResponse(res, { student: updatedStudent }, "Student updated successfully");
+});
+
+const deleteStudent = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    
+    const student = await studentRepository.findStudentById(id);
+    if (!student) {
+        throw new NotFoundError("Student not found");
+    }
+
+    await studentRepository.deleteStudent(id);
+    return successResponse(res, null, "Student deleted successfully", 204);
+});
+
 
 export default {
     getAdminDashboard,
@@ -128,4 +146,8 @@ export default {
     createUser,
     updateUser,
     deleteUser,
+    getStudents,
+    createStudent,
+    updateStudent,
+    deleteStudent,
 };

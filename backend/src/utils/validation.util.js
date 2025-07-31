@@ -31,66 +31,36 @@ export const changePasswordSchema = z.object({
 
 // USER MANAGEMENT VALIDATION
 
+const nameValidation = z.string()
+    .min(3, "Name must be at least 3 characters")
+    .max(100, "Name must be less than 100 characters")
+    .refine(
+        (name) => /^[a-zA-Z\s\u0600-\u06FF]+$/.test(name),
+        "Name can only contain letters and spaces from supported languages"
+    )
+    .trim();
+
 export const createUserSchema = z.object({
     body: z.object({
-        name: z.string()
-            .min(3, "Name must be at least 3 characters")
-            .max(100, "Name must be less than 100 characters")
-            .refine(
-                (name) => /^[a-zA-Z\s]+$/.test(name),
-                "Name can only contain letters and spaces"
-            )
-            .trim(),
-        email: z.string()
-            .email("Invalid email format")
-            .max(100, "Email must be less than 100 characters")
-            .toLowerCase()
-            .trim(),
-        phone: z.string()
-            .refine(
-                (phone) => /^[0-9+\-\s()]+$/.test(phone),
-                "Invalid phone number format"
-            )
-            .min(8, "Phone number must be at least 10 digits")
-            .max(20, "Phone number must be less than 20 digits")
-            .optional(),
-        role: z.enum(["PARENT", "SUPERVISOR"], {
-            errorMap: () => ({ message: "Role must be PARENT, or SUPERVISOR" })
-        })
+        nationalId: z.string().min(8, "National ID is too short").max(12, "National ID is too long"),
+        name: nameValidation,
+        email: z.string().email("Invalid email format").toLowerCase().trim(),
+        phone: z.string().regex(/^(\+\d{1,3}[- ]?)?\d{8,15}$/, "Invalid phone number format").optional(),
+        role: z.enum(['ADMIN', 'SUPERVISOR', 'PARENT']),
     })
 });
 
 export const updateUserSchema = z.object({
     body: z.object({
-        name: z.string()
-            .min(3, "Name must be at least 3 characters")
-            .max(100, "Name must be less than 100 characters")
-            .refine(
-                (name) => /^[a-zA-Z\s]+$/.test(name),
-                "Name can only contain letters and spaces"
-            )
-            .trim()
-            .optional(),
-        email: z.string()
-            .email("Invalid email format")
-            .max(100, "Email must be less than 100 characters")
-            .toLowerCase()
-            .trim()
-            .optional(),
-        phone: z.string()
-            .refine(
-                (phone) => /^[0-9+\-\s()]+$/.test(phone),
-                "Invalid phone number format"
-            )
-            .min(10, "Phone number must be at least 10 digits")
-            .max(20, "Phone number must be less than 20 digits")
-            .optional(),
-        status: z.enum(["ACTIVE", "INACTIVE"], {
-            errorMap: () => ({ message: "Status must be ACTIVE or INACTIVE" })
-        }).optional()
+        nationalId: z.string().min(8).max(12).optional(),
+        name: nameValidation.optional(),
+        email: z.string().email().toLowerCase().trim().optional(),
+        phone: z.string().regex(/^(\+\d{1,3}[- ]?)?\d{8,15}$/, "Invalid phone number").optional(),
+        role: z.enum(['ADMIN', 'SUPERVISOR', 'PARENT']).optional(),
+        status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
     }).partial(),
     params: z.object({
-        id: z.string().uuid({ message: "Invalid user ID" }),
+        id: z.string().uuid(),
     }),
 });
 
@@ -111,19 +81,31 @@ export const userQuerySchema = z.object({
 // STUDENT MANAGEMENT VALIDATION
 export const createStudentSchema = z.object({
     body: z.object({
-        name: z.string()
-            .min(3, "Student name must be at least 3 characters")
-            .max(100, "Student name must be less than 100 characters")
-            .refine(
-                (name) => /^[a-zA-Z\s]+$/.test(name),
-                "Student name can only contain letters and spaces"
-            )
-            .trim(),
-        parentId: z.string()
-            .uuid("Invalid parent ID format"),
-        busId: z.string()
-            .uuid("Invalid bus ID format")
+        nationalId: z.string().min(8, "National ID is too short").max(12, "National ID is too long"),
+        name: nameValidation,
+        grade: z.string().min(1).max(20),
+        homeAddress: z.string().optional(),
+        homeLatitude: z.number().optional(),
+        homeLongitude: z.number().optional(),
+        parentId: z.string().uuid("Invalid Parent ID"),
     })
+});
+
+export const updateStudentSchema = z.object({
+    body: z.object({
+        nationalId: z.string().min(8).max(12).optional(),
+        name: nameValidation.optional(),
+        grade: z.string().min(1).max(20).optional(),
+        homeAddress: z.string().optional().nullable(),
+        homeLatitude: z.number().optional().nullable(),
+        homeLongitude: z.number().optional().nullable(),
+        parentId: z.string().uuid("Invalid Parent ID").optional(),
+        busId: z.string().uuid("Invalid Bus ID").optional().nullable(),
+        status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+    }).partial(),
+    params: z.object({
+        id: z.string().uuid(),
+    }),
 });
 
 

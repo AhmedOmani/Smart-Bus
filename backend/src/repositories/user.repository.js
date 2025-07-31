@@ -1,42 +1,52 @@
 import { client } from "../config/db.js"
 
-const findUsers = async () => {
+const findUsers = (query = {}) => {
+    return client.user.findMany({
+        where: query,
+        include: {
+            parent: true,
+            supervisor: true,
+        }
+    });
+};
+
+const findUserBySearch = async (where) => {
     return await client.user.findMany({
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            role: true,
-            username: true,
-            status: true,
-            createdAt: true,
-            students: { select: { id: true, name: true } },
-            buses: { select: { id: true, name: true } }
+        where,  
+        include: {
+            parent: true,
+            supervisor: true,
         },
         orderBy: { name: "asc" }
     });
 }
-
-const createUser = async({ name, email, phone, role, username , password }) => {
-    return await client.user.create({
-        data: { name, email, phone, role, username, password }
-    });
-}
-
-const createUserWithCredentials = async({ name, email, phone, role }, { username, password: plainPassword, hashedPassword }) => {
-    return await client.$transaction(async (tx) => {
+const createUser = async({ nationalId, name, email, phone, role, username , password , hashedPassword }) => {
+    const transaction = await client.$transaction(async (tx) => {
+       
         const user = await tx.user.create({
-            data: { name, email, phone, role, username, password: hashedPassword }
+            data: { nationalId, name, email, phone, role, username, password: hashedPassword }
         });
 
+        if (role === 'PARENT') {
+            await tx.parent.create({
+                data: { userId: user.id }
+            });
+        } else if (role === 'SUPERVISOR') {
+            await tx.supervisor.create({
+                data: { userId: user.id }
+            });
+        }
+
         await tx.credential.create({
-            data: { userId: user.id, username, password: plainPassword }
+            data: { userId: user.id, username, password }
         });
 
         return user;
     });
-}           
+
+    return transaction;
+}
+          
 
 const findUserByUsername = async(username) => {
     return await client.user.findUnique({
@@ -97,7 +107,7 @@ const deleteUser = async (id) => {
 
 export default {
     findUsers,
-    createUserWithCredentials,
+    findUserBySearch,
     createUser,
     findUserByUsername,
     updateUserLogout,

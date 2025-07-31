@@ -18,6 +18,7 @@ import { rateLimitMiddleware } from "./middlewares/ratelimit.middleware.js";
 // Routes
 import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import parentRoutes from "./routes/parent.route.js";
 
 const app = express();
 
@@ -35,8 +36,10 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 app.use(rateLimitMiddleware);
 
+//APIs
 app.use("/api/v1/auth" , authRoutes);
 app.use("/api/v1/admin" , adminRoutes);
+app.use("/api/v1/parent", parentRoutes);
 
 app.use(globalErrorHandler);
 

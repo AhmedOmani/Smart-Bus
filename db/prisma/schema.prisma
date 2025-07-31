@@ -11,33 +11,52 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ========================================
-// USER MANAGEMENT
-// ========================================
-
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  phone     String?
-  role      UserRole @default(PARENT)
-  username  String   @unique 
-  password  String   
-  status    UserStatus @default(ACTIVE)
-  lastLoginAt  DateTime? 
-  lastLogoutAt DateTime? 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  nationalId String   @unique
+  name       String
+  email      String   @unique
+  phone      String?
+  role       UserRole @default(PARENT)
+  username   String   @unique
+  password   String
+  status     UserStatus @default(ACTIVE)
+  lastLoginAt  DateTime?
+  lastLogoutAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  // Relationships
-  students    Student[]    // Parent -> Students
-  buses       Bus[]        // Supervisor -> Buses
-  credentials Credential[] // User -> Credentials
+  
+  parent     Parent?
+  supervisor Supervisor?
+  credentials Credential[]
 
   @@map("users")
   @@index([role], name: "idx_users_role")
   @@index([email], name: "idx_users_email")
   @@index([status], name: "idx_users_status")
+  @@index([nationalId], name: "idx_users_national_id")
+}
+
+model Parent {
+  id       String    @id @default(uuid())
+  userId   String    @unique
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students Student[]
+
+  @@map("parents")
+}
+
+model Supervisor {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  homeAddress   String?
+  homeLatitude  Float?
+  homeLongitude Float?
+  bus           Bus?
+
+  @@map("supervisors")
 }
 
 enum UserRole {
@@ -51,76 +70,14 @@ enum UserStatus {
   INACTIVE
 }
 
-// ========================================
-// STUDENT MANAGEMENT
-// ========================================
-
-model Student {
-  id       String        @id @default(uuid())
-  name     String
-  parentId String
-  busId    String
-  status   StudentStatus @default(ACTIVE)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-
-  // Relationships
-  parent User  @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  bus    Bus   @relation(fields: [busId], references: [id], onDelete: Cascade)
-
-  @@map("students")
-  @@index([parentId], name: "idx_students_parent")
-  @@index([busId], name: "idx_students_bus")
-  @@index([status], name: "idx_students_status")
-}
-
-enum StudentStatus {
-  ACTIVE
-  INACTIVE
-}
-
-// ========================================
-// BUS MANAGEMENT
-// ========================================
-
-model Bus {
-  id           String     @id @default(uuid())
-  name         String     @unique
-  supervisorId String?
-  capacity     Int        @default(20)
-  status       BusStatus  @default(ACTIVE)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  // Relationships
-  supervisor User?     @relation(fields: [supervisorId], references: [id], onDelete: SetNull)
-  students   Student[]
-
-  @@map("buses")
-  @@index([supervisorId], name: "idx_buses_supervisor")
-  @@index([status], name: "idx_buses_status")
-}
-
-enum BusStatus {
-  ACTIVE
-  INACTIVE
-  MAINTENANCE
-}
-
-// ========================================
-// CREDENTIAL MANAGEMENT
-// ========================================
-
 model Credential {
-  id         String   @id @default(uuid())
-  userId     String
-  username   String
-  password   String   // Encrypted password for admin retrieval
-  isActive   Boolean  @default(true)
-  generatedAt DateTime @default(now())
-
-  // Relationships
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid())
+  userId    String
+  username  String
+  password  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("credentials")
   @@index([userId], name: "idx_credentials_user")
@@ -136,4 +93,66 @@ model BlackListedToken {
   @@map("black_listed_tokens")
   @@index([token], name: "idx_black_listed_tokens_token")
   @@index([expiresAt], name: "idx_black_listed_tokens_expires_at")
+}
+
+
+model Student {
+  id          String        @id @default(uuid())
+  nationalId  String        @unique
+  name        String
+  grade       String
+  homeAddress String?
+  homeLatitude  Float?
+  homeLongitude Float?
+
+
+  parentId String
+  parent   Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  busId    String?
+  bus      Bus?     @relation(fields: [busId], references: [id], onDelete: SetNull) // SetNull is safer here
+  
+  status      StudentStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("students")
+  @@index([parentId], name: "idx_students_parent")
+  @@index([busId], name: "idx_students_bus")
+  @@index([status], name: "idx_students_status")
+  @@index([nationalId], name: "idx_students_national_id")
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Bus {
+  id                  String    @id @default(uuid())
+  busNumber           String    @unique
+  capacity            Int
+  model               String?
+  year                Int?
+  driverName          String?
+  driverPhone         String?
+  driverLicenseNumber String?
+
+  status    BusStatus @default(ACTIVE)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+
+  supervisorId String?     @unique
+  supervisor   Supervisor? @relation(fields: [supervisorId], references: [id], onDelete: SetNull) // SetNull is safer
+  students     Student[]
+
+  @@map("buses")
+  @@index([supervisorId], name: "idx_buses_supervisor")
+  @@index([status], name: "idx_buses_status")
+}
+
+enum BusStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
 }
