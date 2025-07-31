@@ -1,5 +1,11 @@
 import { PrismaClient } from "../generated/prisma/index.js";
 import bcrypt from "bcrypt";
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables from the root .env file
+dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
+
 
 const client = new PrismaClient();
 

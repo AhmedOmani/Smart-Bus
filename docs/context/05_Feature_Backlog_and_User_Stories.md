@@ -24,9 +24,9 @@ This document tracks the implementation status of our core features, framed as u
 
 | ID | User Story | Status |
 | :--- | :--- | :--- |
-| **US-009** | As an Admin, I want to create, update, and delete bus records. | *Planned* |
-| **US-010** | As an Admin, I want to assign a supervisor to a bus. | *Planned* |
-| **US-011** | As an Admin, I want to assign a student to a bus. | *Planned* |
+| **US-009** | As an Admin, I want to create, update, and delete bus records. | **Implemented** |
+| **US-010** | As an Admin, I want to assign a supervisor to a bus. | **Implemented** |
+| **US-011** | As an Admin, I want to assign a student to a bus. | **Implemented** |
 
 ## Epic: Real-Time Tracking & Attendance
 

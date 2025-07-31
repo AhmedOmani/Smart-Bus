@@ -25,6 +25,7 @@
     "bcrypt": "^6.0.0"
   },
   "devDependencies": {
+    "dotenv": "^17.2.1",
     "prisma": "^6.12.0"
   }
 }

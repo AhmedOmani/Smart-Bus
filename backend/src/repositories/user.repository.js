@@ -46,8 +46,7 @@ const createUser = async({ nationalId, name, email, phone, role, username , pass
 
     return transaction;
 }
-          
-
+        
 const findUserByUsername = async(username) => {
     return await client.user.findUnique({
         where: { username }

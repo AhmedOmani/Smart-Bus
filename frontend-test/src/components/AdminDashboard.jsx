@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Typography, Button, Box, Paper, Tabs, Tab } from '@mui/material';
 import UserManagement from './UserManagement';
 import StudentManagement from './StudentManagement';
+import BusManagement from './BusManagement';
 
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -35,6 +36,7 @@ function AdminDashboard({ user, onLogout }) {
                     <Tabs value={tabIndex} onChange={handleTabChange} aria-label="admin dashboard tabs">
                         <Tab label="User Management" />
                         <Tab label="Student Management" />
+                        <Tab label="Bus Management" />
                     </Tabs>
                 </Box>
                 <TabPanel value={tabIndex} index={0}>
@@ -42,6 +44,9 @@ function AdminDashboard({ user, onLogout }) {
                 </TabPanel>
                 <TabPanel value={tabIndex} index={1}>
                     <StudentManagement />
+                </TabPanel>
+                <TabPanel value={tabIndex} index={2}>
+                    <BusManagement />
                 </TabPanel>
             </Paper>
         </Box>

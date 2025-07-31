@@ -12,6 +12,7 @@ export const globalErrorHandler = (err, req, res, next) => {
     }
 
     if (err.code === 'P2025') {
+        console.log(err);
         const message = 'Record not found';
         error = new ApiError(message, 404, 'NOT_FOUND');
     }

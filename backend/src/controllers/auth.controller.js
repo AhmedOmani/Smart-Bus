@@ -8,7 +8,7 @@ import userRepository from "../repositories/user.repository.js";
 
 const login = asyncHandler(async (req, res) => {
     
-    const { username, password } = req.validatedData;    
+    const { username, password } = req.validatedData.body;    
 
     const existingUser = await userRepository.findUserByUsername(username);
     
@@ -57,7 +57,7 @@ const getCurrentUser = asyncHandler(async (req , res) => {
 });
 
 const changePassword = asyncHandler(async (req , res) => {
-    const { currentPassword, newPassword } = req.validatedData;
+    const { currentPassword, newPassword } = req.validatedData.body;
 
     const user = await userRepository.findUserById(req.user.id);
 

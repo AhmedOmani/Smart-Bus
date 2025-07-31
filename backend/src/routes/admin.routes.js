@@ -1,7 +1,7 @@
 import express from "express";
 import adminController from "../controllers/admin.controller.js";
 import { authenticationMiddleware , adminMiddleware } from "../middlewares/auth.middleware.js";
-import { validateRequest,  createUserSchema, updateUserSchema ,createStudentSchema ,updateStudentSchema , userQuerySchema} from "../utils/validation.util.js";
+import { validateRequest,  createUserSchema, updateUserSchema ,createStudentSchema ,updateStudentSchema , userQuerySchema , createBusSchema , updateBusSchema} from "../utils/validation.util.js";
 
 const adminRoutes = express.Router();
 
@@ -22,5 +22,14 @@ adminRoutes.get("/students" , adminController.getStudents);
 adminRoutes.post("/students" , validateRequest(createStudentSchema) , adminController.createStudent);
 adminRoutes.put("/students/:id" , validateRequest(updateStudentSchema) , adminController.updateStudent);
 adminRoutes.delete("/students/:id" , adminController.deleteStudent);
+
+//Bus Management
+adminRoutes.get("/buses" , adminController.getBuses);
+adminRoutes.post("/buses" , validateRequest(createBusSchema) , adminController.createBus);
+adminRoutes.put("/buses/:id" , validateRequest(updateBusSchema) , adminController.updateBus);
+adminRoutes.delete("/buses/:id" , adminController.deleteBus);
+
+//Supervisor Management
+adminRoutes.get("/supervisors" , adminController.getSupervisors);
 
 export default adminRoutes;

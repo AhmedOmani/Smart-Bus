@@ -1,235 +1,325 @@
-import { useState, useEffect } from 'react';
-import { api } from '../api';
+import React, { useState, useEffect } from 'react';
 import {
-    Typography, Button, Box, Paper, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, IconButton, CircularProgress, Alert, Dialog, DialogTitle,
-    DialogContent, TextField, DialogActions, Autocomplete, FormControl, InputLabel, Select, MenuItem
+  Box, Typography, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Alert,
+  Autocomplete
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { api } from '../api';
 
-function StudentManagement() {
-    const [students, setStudents] = useState([]);
-    const [parents, setParents] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+const StudentManagement = () => {
+  const [students, setStudents] = useState([]);
+  const [parents, setParents] = useState([]);
+  const [buses, setBuses] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentStudent, setCurrentStudent] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    nationalId: '',
+    grade: '',
+    parentId: '',
+    homeAddress: '',
+    homeLatitude: '',
+    homeLongitude: '',
+    busId: null,
+  });
+  const [formErrors, setFormErrors] = useState({});
+  const [errorMessage, setErrorMessage] = useState('');
 
-    const [formErrors, setFormErrors] = useState({});
-    
-    const [openCreateDialog, setOpenCreateDialog] = useState(false);
-    const [newStudent, setNewStudent] = useState({ nationalId: '', name: '', grade: '', parentId: null });
+  const fetchStudents = async () => {
+    try {
+      const response = await api.get('/admin/students');
+      setStudents(response.data.data.students);
+    } catch (error) {
+      setErrorMessage(error.response?.data?.error?.message || 'Failed to fetch students.');
+    }
+  };
 
-    const [openEditDialog, setOpenEditDialog] = useState(false);
-    const [editingStudent, setEditingStudent] = useState(null);
+  const fetchParents = async () => {
+    try {
+      const response = await api.get('/admin/users/search?role=PARENT');
+      setParents(response.data.data.users);
+    } catch (error) {
+      console.error("Failed to fetch parents:", error);
+    }
+  };
 
-    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-    const [studentToDelete, setStudentToDelete] = useState(null);
+  const fetchBuses = async () => {
+    try {
+      const response = await api.get('/admin/buses');
+      setBuses(response.data.data.buses);
+    } catch (error) {
+      console.error("Failed to fetch buses:", error);
+    }
+  };
 
-    const fetchStudents = async () => {
-        setIsLoading(true);
-        try {
-            const response = await api.get('/admin/students');
-            setStudents(response.data.data.students);
-        } catch (err) {
-            setError(err.response?.data?.error?.message || 'Failed to fetch students.');
-        }
-        setIsLoading(false);
+  useEffect(() => {
+    fetchStudents();
+    fetchParents();
+    fetchBuses();
+  }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleClickOpen = (student = null) => {
+    setIsEditing(!!student);
+    setCurrentStudent(student);
+    setFormData(student ? {
+      name: student.name,
+      nationalId: student.nationalId,
+      grade: student.grade,
+      parentId: student.parent?.userId || '',
+      homeAddress: student.homeAddress || '',
+      homeLatitude: student.homeLatitude || '',
+      homeLongitude: student.homeLongitude || '',
+      busId: student.bus?.id || null,
+    } : {
+      name: '',
+      nationalId: '',
+      grade: '',
+      parentId: '',
+      homeAddress: '',
+      homeLatitude: '',
+      homeLongitude: '',
+      busId: null,
+    });
+    setFormErrors({});
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setCurrentStudent(null);
+  };
+
+  const handleSubmit = async () => {
+    // Basic validation
+    let errors = {};
+    if (!formData.name) errors.name = 'Name is required';
+    if (!formData.nationalId) errors.nationalId = 'National ID is required';
+    if (!formData.grade) errors.grade = 'Grade is required';
+    if (!formData.parentId) errors.parentId = 'Parent is required';
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    const dataPayload = {
+      ...formData,
+      homeLatitude: formData.homeLatitude ? parseFloat(formData.homeLatitude) : null,
+      homeLongitude: formData.homeLongitude ? parseFloat(formData.homeLongitude) : null,
     };
-    
-    const fetchParents = async () => {
-        try {
-            // Corrected to use the /search endpoint
-            const response = await api.get('/admin/users/search', { params: { role: 'PARENT' } });
-            const parentData = response.data.data.users.map(user => ({
-                id: user.parent.id, 
-                name: `${user.name} (${user.nationalId})`
-            }));
-            setParents(parentData);
-        } catch (err) {
-            console.error("Failed to fetch parents", err);
-        }
-    };
-    
-    useEffect(() => {
-        fetchStudents();
-        fetchParents();
-    }, []);
 
-    const handleOpenCreateDialog = () => {
-        setFormErrors({});
-        setNewStudent({ nationalId: '', name: '', grade: '', parentId: null });
-        setOpenCreateDialog(true);
-    };
-
-    const handleCreateStudent = async () => {
-        try {
-            await api.post('/admin/students', {
-                ...newStudent,
-                parentId: newStudent.parentId?.id
-            });
-            setOpenCreateDialog(false);
-            fetchStudents();
-        } catch (err) {
-            if (err.response?.data?.error?.code === 'VALIDATION_ERROR') {
-                const newErrors = {};
-                err.response.data.error.details.forEach(detail => {
-                    newErrors[detail.field.split('.').pop()] = detail.message;
-                });
-                setFormErrors(newErrors);
-            } else {
-                setError(err.response?.data?.error?.message || 'Failed to create student.');
-                setOpenCreateDialog(false);
-            }
-        }
-    };
-
-    const handleOpenEditDialog = (student) => {
-        setFormErrors({});
-        setEditingStudent({
-            ...student,
-            parentId: student.parent.id, // Set the parentId for the form
+    try {
+      if (isEditing) {
+        await api.put(`/admin/students/${currentStudent.id}`, dataPayload);
+      } else {
+        await api.post('/admin/students', dataPayload);
+      }
+      fetchStudents();
+      handleClose();
+    } catch (error) {
+      const errorDetails = error.response?.data?.error?.details;
+      if (errorDetails) {
+        let backendErrors = {};
+        errorDetails.forEach(detail => {
+          const field = detail.field.split('.').pop();
+          backendErrors[field] = detail.message;
         });
-        setOpenEditDialog(true);
-    };
+        setFormErrors(backendErrors);
+      } else {
+        setFormErrors({ form: error.response?.data?.error?.message || 'An error occurred.' });
+      }
+    }
+  };
 
-    const handleUpdateStudent = async () => {
-        if (!editingStudent) return;
-        try {
-            await api.put(`/admin/students/${editingStudent.id}`, editingStudent);
-            setOpenEditDialog(false);
-            fetchStudents();
-        } catch (err) {
-             if (err.response?.data?.error?.code === 'VALIDATION_ERROR') {
-                const newErrors = {};
-                err.response.data.error.details.forEach(detail => {
-                    newErrors[detail.field.split('.').pop()] = detail.message;
-                });
-                setFormErrors(newErrors);
-            } else {
-                setError(err.response?.data?.error?.message || 'Failed to update student.');
-                setOpenEditDialog(false);
-            }
-        }
-    };
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this student?')) {
+      try {
+        await api.delete(`/admin/students/${id}`);
+        fetchStudents();
+      } catch (error) {
+        setErrorMessage(error.response?.data?.error?.message || 'Failed to delete student.');
+      }
+    }
+  };
 
-    const confirmDeleteStudent = async () => {
-        if (!studentToDelete) return;
-        try {
-            await api.delete(`/admin/students/${studentToDelete.id}`);
-            fetchStudents();
-        } catch (err) {
-             setError(err.response?.data?.error?.message || 'Failed to delete student.');
-        } finally {
-            setOpenDeleteDialog(false);
-            setStudentToDelete(null);
-        }
-    };
-
-    return (
-        <Box>
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6">Student Management</Typography>
-                <Button variant="contained" color="primary" onClick={handleOpenCreateDialog}>
-                    Create New Student
-                </Button>
-            </Box>
-
-            {error && <Alert severity="error" onClose={() => setError('')} sx={{my: 2}}>{error}</Alert>}
-
-            <TableContainer component={Paper}>
-                {isLoading ? <CircularProgress sx={{m: 5}}/> : (
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Name</TableCell>
-                            <TableCell>National ID</TableCell>
-                            <TableCell>Grade</TableCell>
-                            <TableCell>Parent</TableCell>
-                            <TableCell>Bus</TableCell>
-                            <TableCell>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {students.map((student) => (
-                            <TableRow key={student.id} hover>
-                                <TableCell>{student.name}</TableCell>
-                                <TableCell>{student.nationalId}</TableCell>
-                                <TableCell>{student.grade}</TableCell>
-                                <TableCell>{student.parent?.user?.name || 'N/A'}</TableCell>
-                                <TableCell>{student.bus?.busNumber || 'Unassigned'}</TableCell>
-                                <TableCell>
-                                    <IconButton size="small" onClick={() => handleOpenEditDialog(student)}><EditIcon /></IconButton>
-                                    <IconButton size="small" onClick={() => { setStudentToDelete(student); setOpenDeleteDialog(true); }}><DeleteIcon /></IconButton>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-                )}
-            </TableContainer>
-
-            {/* Create Student Dialog */}
-            <Dialog open={openCreateDialog} onClose={() => setOpenCreateDialog(false)} fullWidth maxWidth="sm">
-                <DialogTitle>Create New Student</DialogTitle>
-                <DialogContent>
-                    <TextField autoFocus margin="dense" label="National ID" fullWidth value={newStudent.nationalId} onChange={(e) => { setNewStudent({...newStudent, nationalId: e.target.value}); if(formErrors.nationalId) setFormErrors({...formErrors, nationalId: undefined}); }} error={!!formErrors.nationalId} helperText={formErrors.nationalId} />
-                    <TextField margin="dense" label="Full Name" fullWidth value={newStudent.name} onChange={(e) => { setNewStudent({...newStudent, name: e.target.value}); if(formErrors.name) setFormErrors({...formErrors, name: undefined}); }} error={!!formErrors.name} helperText={formErrors.name} />
-                    <TextField margin="dense" label="Grade" fullWidth value={newStudent.grade} onChange={(e) => { setNewStudent({...newStudent, grade: e.target.value}); if(formErrors.grade) setFormErrors({...formErrors, grade: undefined}); }} error={!!formErrors.grade} helperText={formErrors.grade} />
-                    <Autocomplete
-                        options={parents}
-                        getOptionLabel={(option) => option.name}
-                        onChange={(event, newValue) => {
-                            setNewStudent({...newStudent, parentId: newValue });
-                            if(formErrors.parentId) setFormErrors({...formErrors, parentId: undefined});
-                        }}
-                        renderInput={(params) => <TextField {...params} margin="dense" label="Search for Parent" error={!!formErrors.parentId} helperText={formErrors.parentId} />}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenCreateDialog(false)}>Cancel</Button>
-                    <Button onClick={handleCreateStudent}>Create</Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Edit Student Dialog */}
-            {editingStudent && (
-                 <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} fullWidth maxWidth="sm">
-                    <DialogTitle>Edit Student</DialogTitle>
-                    <DialogContent>
-                        <TextField autoFocus margin="dense" label="National ID" fullWidth value={editingStudent.nationalId} onChange={(e) => { setEditingStudent({...editingStudent, nationalId: e.target.value}); if(formErrors.nationalId) setFormErrors({...formErrors, nationalId: undefined}); }} error={!!formErrors.nationalId} helperText={formErrors.nationalId} />
-                        <TextField margin="dense" label="Full Name" fullWidth value={editingStudent.name} onChange={(e) => { setEditingStudent({...editingStudent, name: e.target.value}); if(formErrors.name) setFormErrors({...formErrors, name: undefined}); }} error={!!formErrors.name} helperText={formErrors.name} />
-                        <TextField margin="dense" label="Grade" fullWidth value={editingStudent.grade} onChange={(e) => { setEditingStudent({...editingStudent, grade: e.target.value}); if(formErrors.grade) setFormErrors({...formErrors, grade: undefined}); }} error={!!formErrors.grade} helperText={formErrors.grade} />
-                        <FormControl fullWidth margin="dense" error={!!formErrors.status}>
-                            <InputLabel>Status</InputLabel>
-                            <Select value={editingStudent.status} label="Status" onChange={(e) => { setEditingStudent({...editingStudent, status: e.target.value}); if(formErrors.status) setFormErrors({...formErrors, status: undefined}); }}>
-                                <MenuItem value="ACTIVE">Active</MenuItem>
-                                <MenuItem value="INACTIVE">Inactive</MenuItem>
-                            </Select>
-                            {formErrors.status && <p style={{color: '#d32f2f', fontSize: '0.75rem', margin: '3px 14px 0'}}>{formErrors.status}</p>}
-                        </FormControl>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenEditDialog(false)}>Cancel</Button>
-                        <Button onClick={handleUpdateStudent}>Save Changes</Button>
-                    </DialogActions>
-                </Dialog>
-            )}
-
-            {/* Delete Confirmation Dialog */}
-            {studentToDelete && (
-                <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-                    <DialogTitle>Confirm Deletion</DialogTitle>
-                    <DialogContent>
-                        <Typography>Are you sure you want to permanently delete the student: <strong>{studentToDelete.name}</strong>?</Typography>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
-                        <Button onClick={confirmDeleteStudent} color="error">Delete</Button>
-                    </DialogActions>
-                </Dialog>
-            )}
+  return (
+    <Box>
+       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6">Student Management</Typography>
+            <Button variant="contained" color="primary" onClick={() => handleClickOpen()}>
+                Create New Student
+            </Button>
         </Box>
-    );
-}
+
+      {errorMessage && <Alert severity="error" sx={{ my: 2 }}>{errorMessage}</Alert>}
+      
+      <TableContainer component={Paper} sx={{ mt: 2 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>National ID</TableCell>
+              <TableCell>Grade</TableCell>
+              <TableCell>Parent</TableCell>
+              <TableCell>Bus</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {students.map((student) => (
+              <TableRow key={student.id}>
+                <TableCell>{student.name}</TableCell>
+                <TableCell>{student.nationalId}</TableCell>
+                <TableCell>{student.grade}</TableCell>
+                <TableCell>{student.parent?.user?.name || 'N/A'}</TableCell>
+                <TableCell>{student.bus?.busNumber || 'N/A'}</TableCell>
+                <TableCell>
+                  <IconButton onClick={() => handleClickOpen(student)}><EditIcon /></IconButton>
+                  <IconButton onClick={() => handleDelete(student.id)}><DeleteIcon /></IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>{isEditing ? 'Edit Student' : 'Create Student'}</DialogTitle>
+        <DialogContent>
+          {formErrors.form && <Alert severity="error" sx={{ mb: 2 }}>{formErrors.form}</Alert>}
+          <TextField
+            autoFocus
+            margin="dense"
+            name="name"
+            label="Full Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={formData.name}
+            onChange={handleInputChange}
+            error={!!formErrors.name}
+            helperText={formErrors.name}
+            required
+          />
+          <TextField
+            margin="dense"
+            name="nationalId"
+            label="National ID"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={formData.nationalId}
+            onChange={handleInputChange}
+            error={!!formErrors.nationalId}
+            helperText={formErrors.nationalId}
+            required
+          />
+          <TextField
+            margin="dense"
+            name="grade"
+            label="Grade"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={formData.grade}
+            onChange={handleInputChange}
+            error={!!formErrors.grade}
+            helperText={formErrors.grade}
+            required
+          />
+          <Autocomplete
+            options={parents}
+            getOptionLabel={(option) => `${option.name} (${option.nationalId})`}
+            value={parents.find(p => p.id === formData.parentId) || null}
+            onChange={(event, newValue) => {
+              setFormData(prev => ({ ...prev, parentId: newValue ? newValue.id : null }));
+            }}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                margin="dense"
+                label="Parent"
+                variant="outlined"
+                error={!!formErrors.parentId}
+                helperText={formErrors.parentId}
+                required
+              />
+            )}
+          />
+          <Autocomplete
+            options={buses}
+            getOptionLabel={(option) => `${option.busNumber} (Plate: ${option.licensePlate || 'N/A'})`}
+            value={buses.find(b => b.id === formData.busId) || null}
+            onChange={(event, newValue) => {
+              setFormData(prev => ({ ...prev, busId: newValue ? newValue.id : null }));
+            }}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                margin="dense"
+                label="Bus"
+                variant="outlined"
+                error={!!formErrors.busId}
+                helperText={formErrors.busId}
+              />
+            )}
+          />
+          <TextField
+            margin="dense"
+            name="homeAddress"
+            label="Home Address"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={formData.homeAddress}
+            onChange={handleInputChange}
+            error={!!formErrors.homeAddress}
+            helperText={formErrors.homeAddress}
+          />
+          <TextField
+            margin="dense"
+            name="homeLatitude"
+            label="Home Latitude"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={formData.homeLatitude}
+            onChange={handleInputChange}
+            error={!!formErrors.homeLatitude}
+            helperText={formErrors.homeLatitude}
+          />
+          <TextField
+            margin="dense"
+            name="homeLongitude"
+            label="Home Longitude"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={formData.homeLongitude}
+            onChange={handleInputChange}
+            error={!!formErrors.homeLongitude}
+            helperText={formErrors.homeLongitude}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleSubmit}>{isEditing ? 'Save Changes' : 'Create'}</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+};
 
 export default StudentManagement; 

@@ -30,7 +30,6 @@ export const changePasswordSchema = z.object({
 
 
 // USER MANAGEMENT VALIDATION
-
 const nameValidation = z.string()
     .min(3, "Name must be at least 3 characters")
     .max(100, "Name must be less than 100 characters")
@@ -81,26 +80,27 @@ export const userQuerySchema = z.object({
 // STUDENT MANAGEMENT VALIDATION
 export const createStudentSchema = z.object({
     body: z.object({
-        nationalId: z.string().min(8, "National ID is too short").max(12, "National ID is too long"),
         name: nameValidation,
-        grade: z.string().min(1).max(20),
-        homeAddress: z.string().optional(),
-        homeLatitude: z.number().optional(),
-        homeLongitude: z.number().optional(),
-        parentId: z.string().uuid("Invalid Parent ID"),
+        nationalId: z.string().min(1, 'National ID is required'),
+        grade: z.string().min(1, 'Grade is required'),
+        parentId: z.string().uuid('Invalid parent ID'),
+        busId: z.string().uuid("Invalid bus ID").optional().nullable(),
+        homeAddress: z.string().optional().nullable(),
+        homeLatitude: z.number().optional().nullable(),
+        homeLongitude: z.number().optional().nullable(),
     })
 });
 
 export const updateStudentSchema = z.object({
     body: z.object({
-        nationalId: z.string().min(8).max(12).optional(),
         name: nameValidation.optional(),
-        grade: z.string().min(1).max(20).optional(),
+        nationalId: z.string().min(1, 'National ID is required').optional(),
+        grade: z.string().min(1, 'Grade is required').optional(),
+        parentId: z.string().uuid('Invalid parent ID').optional(),
+        busId: z.string().uuid("Invalid bus ID").optional().nullable(),
         homeAddress: z.string().optional().nullable(),
         homeLatitude: z.number().optional().nullable(),
         homeLongitude: z.number().optional().nullable(),
-        parentId: z.string().uuid("Invalid Parent ID").optional(),
-        busId: z.string().uuid("Invalid Bus ID").optional().nullable(),
         status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
     }).partial(),
     params: z.object({
@@ -108,30 +108,38 @@ export const updateStudentSchema = z.object({
     }),
 });
 
-
 // BUS MANAGEMENT VALIDATION
 export const createBusSchema = z.object({
     body: z.object({
-        name: z.string()
-            .min(3, "Bus name must be at least 3 characters")
-            .max(50, "Bus name must be less than 50 characters")
-            .trim(),
-        supervisorId: z.string()
-            .uuid("Invalid supervisor ID format")
-            .optional(),
-        capacity: z.number()
-            .int("Capacity must be a whole number")
-            .min(1, "Capacity must be at least 1")
-            .max(100, "Capacity must be less than 100")
-            .optional()
+        busNumber: z.string().min(1, 'Bus number is required'),
+        licensePlate: z.string().optional().nullable(),
+        capacity: z.number().int().positive('Capacity must be a positive number'),
+        model: z.string().optional().nullable(),
+        year: z.number().int().positive('Year must be a positive number').optional().nullable(),
+        driverName: z.string().optional().nullable(),
+        driverPhone: z.string().optional().nullable(),
+        driverLicenseNumber: z.string().optional().nullable(),
+        supervisorId: z.string().uuid("Invalid supervisor ID").optional().nullable(),
+        status: z.enum(['ACTIVE', 'INACTIVE', 'MAINTENANCE']).optional(),
     })
 });
 
-export const assignSupervisorSchema = z.object({
+export const updateBusSchema = z.object({
     body: z.object({
-        supervisorId: z.string()
-            .uuid("Invalid supervisor ID format")
-    })
+        busNumber: z.string().min(1).optional(),
+        licensePlate: z.string().optional().nullable(),
+        capacity: z.number().int().positive().optional(),
+        model: z.string().optional().nullable(),
+        year: z.number().int().positive().optional().nullable(),
+        driverName: z.string().optional().nullable(),
+        driverPhone: z.string().optional().nullable(),
+        driverLicenseNumber: z.string().optional().nullable(),
+        supervisorId: z.string().uuid("Invalid supervisor ID").optional().nullable(),
+        status: z.enum(['ACTIVE', 'INACTIVE', 'MAINTENANCE']).optional(),
+    }).partial(),
+    params: z.object({
+        id: z.string().uuid(),
+    }),
 });
 
 // ========================================
@@ -161,8 +169,8 @@ export const validateRequest = (schema) => (req, res, next) => {
                 }
             });
         }
-        console.log(result.data.body);
-        req.validatedData = result.data.body;
+        
+        req.validatedData = result.data; // Corrected: assign the whole data object
         next();
     } catch (error) {
         next(error);

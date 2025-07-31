@@ -6,6 +6,8 @@ import { successResponse } from "../utils/response.util.js";
 import { ApiError, NotFoundError } from "../utils/errors.util.js";
 import userRepository from "../repositories/user.repository.js";
 import studentRepository from "../repositories/student.repository.js";
+import busRepository from "../repositories/bus.repository.js";
+import supervisorRepository from "../repositories/supervisor.repository.js";
 
 const getAdminDashboard = asyncHandler(async (req, res) => {
     const [users, students, activeBuses] = await Promise.all([
@@ -41,7 +43,8 @@ const getUsersBySearch = asyncHandler(async (req, res) => {
     return successResponse(res, { users }, "Users fetched successfully");
 });
 const createUser = asyncHandler(async (req, res) => {
-    const { nationalId , name, email, phone, role  } = req.validatedData;
+    console.log(req.validatedData);
+    const { nationalId , name, email, phone, role  } = req.validatedData.body;
 
     const username = await generateUsername(name);
     const password = generatePassword();
@@ -99,23 +102,14 @@ const getStudents = asyncHandler(async (req, res) => {
     const students = await studentRepository.findStudents();
     return successResponse(res, { students }, "Students fetched successfully");
 });
-
 const createStudent = asyncHandler(async (req, res) => {
-    const studentData = req.validatedData;
-
-    // Verify parent exists
-    const parent = await client.parent.findUnique({ where: { id: studentData.parentId } });
-    if (!parent) {
-        throw new ApiError("The selected parent does not exist.", 400, "VALIDATION_ERROR");
-    }
-
+    const studentData = req.validatedData.body;
     const newStudent = await studentRepository.createStudent(studentData);
     return successResponse(res, { student: newStudent }, "Student created successfully", 201);
 });
-
 const updateStudent = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const studentData = req.validatedData;
+    const studentData = req.validatedData.body;
 
     const student = await studentRepository.findStudentById(id);
     if (!student) {
@@ -125,7 +119,6 @@ const updateStudent = asyncHandler(async (req, res) => {
     const updatedStudent = await studentRepository.updateStudent(id, studentData);
     return successResponse(res, { student: updatedStudent }, "Student updated successfully");
 });
-
 const deleteStudent = asyncHandler(async (req, res) => {
     const { id } = req.params;
     
@@ -138,6 +131,43 @@ const deleteStudent = asyncHandler(async (req, res) => {
     return successResponse(res, null, "Student deleted successfully", 204);
 });
 
+//Bus Management
+const getBuses = asyncHandler(async (req , res) => {
+    const buses = await busRepository.findBuses();
+    return successResponse(res, { buses }, "Buses fetched successfully");
+});
+const createBus = asyncHandler(async (req , res) => {
+    console.log(req.validatedData.body);
+    const busData = req.validatedData.body;
+    const supervisor = await supervisorRepository.findSupervisorById(busData.supervisorId);
+    if (!supervisor) {
+        throw new NotFoundError("Supervisor not found");
+    }
+    busData.supervisorId = supervisor.id;
+    const bus = await busRepository.createBus(busData);
+    return successResponse(res, { bus }, "Bus created successfully", 201);
+});
+const updateBus = asyncHandler(async (req , res) => {
+    const { id } = req.params;
+    const busData = req.validatedData.body;
+    const bus = await busRepository.updateBus(id , busData);
+    return successResponse(res, { bus }, "Bus updated successfully");
+});
+const deleteBus = asyncHandler(async (req , res) => {
+    const { id } = req.params;
+    const bus = await busRepository.findBusById(id);
+    if (!bus) {
+        throw new NotFoundError("Bus not found");
+    }
+    await busRepository.deleteBus(id);
+    return successResponse(res, null, "Bus deleted successfully", 204);
+});
+
+//Supervisor Management
+const getSupervisors = asyncHandler(async (req , res) => {
+    const supervisors = await supervisorRepository.findSupervisors();
+    return successResponse(res, { supervisors }, "Supervisors fetched successfully");
+});
 
 export default {
     getAdminDashboard,
@@ -150,4 +180,9 @@ export default {
     createStudent,
     updateStudent,
     deleteStudent,
+    getBuses,
+    createBus,
+    updateBus,
+    deleteBus,
+    getSupervisors,
 };

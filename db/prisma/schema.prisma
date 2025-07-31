@@ -107,7 +107,7 @@ model Student {
 
 
   parentId String
-  parent   Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  parent   Parent   @relation(fields: [parentId], references: [userId], onDelete: Cascade)
   busId    String?
   bus      Bus?     @relation(fields: [busId], references: [id], onDelete: SetNull) // SetNull is safer here
   
@@ -128,8 +128,9 @@ enum StudentStatus {
 }
 
 model Bus {
-  id                  String    @id @default(uuid())
-  busNumber           String    @unique
+  id                  String     @id @default(uuid())
+  busNumber           String     @unique // The internal, friendly fleet number (e.g., "Bus 7")
+  licensePlate        String?    @unique // The official government-issued license plate (e.g., "9879 اب")
   capacity            Int
   model               String?
   year                Int?

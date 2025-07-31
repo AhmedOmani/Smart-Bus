@@ -20,7 +20,7 @@ All admin routes are protected and require the `ADMIN` role.
 | **Dashboard** | `GET /dashboard` | Provides aggregate statistics for the admin dashboard. |
 | **Users** | `GET /users`, `GET /users/search`, `POST /users`, `PUT /users/:id`, `DELETE /users/:id` | Full CRUD operations for managing all users (Parents, Supervisors, Admins). |
 | **Students** | `GET /students`, `POST /students`, `PUT /students/:id`, `DELETE /students/:id` | Full CRUD operations for managing student records. |
-| **Buses** | (Planned) | (Planned: CRUD for buses, assigning supervisors, etc.) |
+| **Buses** | `GET /buses`, `POST /buses`, `PUT /buses/:id`, `DELETE /buses/:id` | Full CRUD operations for managing buses, including assigning supervisors. |
 
 ## Parent (`/api/v1/parent`)
 
