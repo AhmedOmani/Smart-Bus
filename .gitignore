@@ -30,6 +30,4 @@ lerna-debug.log*
 dist
 build
 .npm
-.eslintcache 
-
-/frontend
+.eslintcache
