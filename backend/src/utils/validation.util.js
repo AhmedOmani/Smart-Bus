@@ -134,12 +134,20 @@ export const updateBusSchema = z.object({
         driverName: z.string().optional().nullable(),
         driverPhone: z.string().optional().nullable(),
         driverLicenseNumber: z.string().optional().nullable(),
-        supervisorId: z.string().uuid("Invalid supervisor ID").optional().nullable(),
+        supervisorId: z.string().uuid("Invalid supervisor ID").optional(),
         status: z.enum(['ACTIVE', 'INACTIVE', 'MAINTENANCE']).optional(),
     }).partial(),
     params: z.object({
         id: z.string().uuid(),
     }),
+});
+
+// LOCATION TRACKING VALIDATION
+export const saveLocationSchema = z.object({
+    body: z.object({
+        latitude: z.number().min(-90, "Invalid latitude").max(90, "Invalid latitude"),
+        longitude: z.number().min(-180, "Invalid longitude").max(180, "Invalid longitude"),
+    })
 });
 
 // ========================================

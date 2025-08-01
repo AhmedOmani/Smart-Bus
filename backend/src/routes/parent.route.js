@@ -8,5 +8,6 @@ parentRoutes.use(authenticationMiddleware , parentMiddleware);
 
 parentRoutes.get("/dashboard" , parentController.getDashboard);
 parentRoutes.get("/students" , parentController.getStudents);
+parentRoutes.get("/my-bus" , parentController.getBus);
 
 export default parentRoutes;

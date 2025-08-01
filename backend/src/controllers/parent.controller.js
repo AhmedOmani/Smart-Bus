@@ -14,4 +14,10 @@ const getStudents = asyncHandler(async (req , res) => {
     return successResponse(res , { students } , "Students fetched successfully");
 });
 
-export default { getDashboard , getStudents };
+const getBus = asyncHandler(async (req , res) => {
+    const id = req.user.id ;
+    const bus = await parentRepository.getBusForParent(id);
+    return successResponse(res , { bus } , "Bus fetched successfully");
+});
+
+export default { getDashboard , getStudents , getBus };

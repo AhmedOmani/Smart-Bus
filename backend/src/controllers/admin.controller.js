@@ -103,7 +103,9 @@ const getStudents = asyncHandler(async (req, res) => {
     return successResponse(res, { students }, "Students fetched successfully");
 });
 const createStudent = asyncHandler(async (req, res) => {
+    
     const studentData = req.validatedData.body;
+    
     const newStudent = await studentRepository.createStudent(studentData);
     return successResponse(res, { student: newStudent }, "Student created successfully", 201);
 });
@@ -137,19 +139,15 @@ const getBuses = asyncHandler(async (req , res) => {
     return successResponse(res, { buses }, "Buses fetched successfully");
 });
 const createBus = asyncHandler(async (req , res) => {
-    console.log(req.validatedData.body);
     const busData = req.validatedData.body;
-    const supervisor = await supervisorRepository.findSupervisorById(busData.supervisorId);
-    if (!supervisor) {
-        throw new NotFoundError("Supervisor not found");
-    }
-    busData.supervisorId = supervisor.id;
+    console.log(busData);
     const bus = await busRepository.createBus(busData);
     return successResponse(res, { bus }, "Bus created successfully", 201);
 });
 const updateBus = asyncHandler(async (req , res) => {
     const { id } = req.params;
     const busData = req.validatedData.body;
+    console.log(busData);
     const bus = await busRepository.updateBus(id , busData);
     return successResponse(res, { bus }, "Bus updated successfully");
 });

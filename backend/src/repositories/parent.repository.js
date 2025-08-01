@@ -27,4 +27,18 @@ const getStudents = async (id) => {
     })
 }
 
-export default { getDashboard , getStudents };
+const getBusForParent = async (parentId) => {
+    const student = await client.student.findFirst({
+        where : {parentId: parentId} ,
+        select : { busId: true }
+    });
+
+    if (!student) return null;
+
+    const bus = await client.bus.findUnique({
+        where: { id: student.busId }
+    });
+    return bus;
+}
+
+export default { getDashboard , getStudents , getBusForParent };

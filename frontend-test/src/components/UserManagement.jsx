@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../api';
+import api from '../api';
 import {
     Typography, Button, Box, Paper, Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, IconButton, CircularProgress, Alert, Dialog, DialogTitle,
@@ -28,7 +28,7 @@ function UserManagement() {
         setIsLoading(true);
         setError('');
         try {
-            const response = await api.get('/admin/users');
+            const response = await api.getUsers();
             setUsers(response.data.data.users);
         } catch (err) {
             setError(err.response?.data?.error?.message || 'Failed to fetch users.');
@@ -49,7 +49,7 @@ function UserManagement() {
 
     const handleCreateUser = async () => {
         try {
-            const response = await api.post('/admin/users', newUser);
+            const response = await api.createUser(newUser);
             setOpenCreateDialog(false);
             fetchUsers();
             setNewCredentials(response.data.data.credentials);
@@ -73,7 +73,7 @@ function UserManagement() {
     const handleUpdateUser = async () => {
         if (!editingUser) return;
         try {
-            await api.put(`/admin/users/${editingUser.id}`, editingUser);
+            const response = await api.updateUser(editingUser.id, editingUser);
             setOpenEditDialog(false);
             fetchUsers();
         } catch (err) {
@@ -100,7 +100,7 @@ function UserManagement() {
     const confirmDeleteUser = async () => {
         if (!userToDelete) return;
         try {
-            await api.delete(`/admin/users/${userToDelete.id}`);
+            await api.deleteUser(userToDelete.id);
             fetchUsers();
         } catch (err) {
             setError(err.response?.data?.error?.message || 'Failed to delete user.');

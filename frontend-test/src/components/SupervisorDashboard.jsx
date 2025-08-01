@@ -1,18 +1,13 @@
-import { Typography, Button } from '@mui/material';
+import React from 'react';
+import { Box, Typography } from '@mui/material';
 
-function SupervisorDashboard({ user, onLogout }) {
-  return (
-    <div>
-      <Typography variant="h4" component="h1" gutterBottom>
-        أهلاً بك يا مشرف, {user.name}
-      </Typography>
-      <Button variant="contained" onClick={onLogout}>
-        تسجيل الخروج
-      </Button>
-      <hr />
-      <p>Supervisor dashboard will be built here.</p>
-    </div>
-  );
-}
+const SupervisorDashboard = () => {
+    return (
+        <Box>
+            <Typography variant="h6">Supervisor Dashboard</Typography>
+            <Typography>Real-time bus management features will be displayed here.</Typography>
+        </Box>
+    );
+};
 
 export default SupervisorDashboard; 

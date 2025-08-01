@@ -43,6 +43,9 @@ model Parent {
   userId   String    @unique
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   students Student[]
+  homeAddress   String?
+  homeLatitude  Float?
+  homeLongitude Float?
 
   @@map("parents")
 }
@@ -144,8 +147,9 @@ model Bus {
 
 
   supervisorId String?     @unique
-  supervisor   Supervisor? @relation(fields: [supervisorId], references: [id], onDelete: SetNull) // SetNull is safer
+  supervisor   Supervisor? @relation(fields: [supervisorId], references: [userId], onDelete: SetNull) // SetNull is safer
   students     Student[]
+  locationLogs LocationLog[] // Add this line to link to the new model
 
   @@map("buses")
   @@index([supervisorId], name: "idx_buses_supervisor")
@@ -156,4 +160,17 @@ enum BusStatus {
   ACTIVE
   INACTIVE
   MAINTENANCE
+}
+
+model LocationLog {
+  id        String   @id @default(uuid())
+  latitude  Float
+  longitude Float
+  timestamp DateTime @default(now())
+  bus       Bus      @relation(fields: [busId], references: [id], onDelete: Cascade)
+  busId     String
+
+  @@map("location_logs")
+  @@index([busId], name: "idx_location_logs_bus")
+  @@index([timestamp], name: "idx_location_logs_timestamp")
 }

@@ -1,3 +1,4 @@
+import http from "http";
 import express from "express" ;
 import cors from "cors";
 import helmet from "helmet";
@@ -19,8 +20,14 @@ import { rateLimitMiddleware } from "./middlewares/ratelimit.middleware.js";
 import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import parentRoutes from "./routes/parent.route.js";
+import busRoutes from "./routes/bus.routes.js";
+import { initWebSocketServer } from "./services/websocket.service.js";
 
 const app = express();
+const server = http.createServer(app);
+
+// Trust proxy since we're behind React dev server proxy
+app.set('trust proxy', true);
 
 app.use((req, res, next) => {
     req.requestId = uuidv4();
@@ -40,6 +47,7 @@ app.use(rateLimitMiddleware);
 app.use("/api/v1/auth" , authRoutes);
 app.use("/api/v1/admin" , adminRoutes);
 app.use("/api/v1/parent", parentRoutes);
+app.use("/api/v1/bus", busRoutes);
 
 app.use(globalErrorHandler);
 
@@ -52,9 +60,10 @@ app.get('/health', (req, res) => {
     });
 });
 
-app.listen(PORT , async () => {
+server.listen(PORT , async () => {
     console.log(`Smart Bus server is running on PORT ${PORT}`);
     console.log("Enviroment:" , process.env.NODE_ENV);
     await connectToDB();
+    initWebSocketServer(server);
 });
 

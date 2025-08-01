@@ -1,13 +1,29 @@
 import { useState, useEffect } from 'react';
+import { Routes, Route, useParams, Navigate } from 'react-router-dom';
 import LoginPage from './components/LoginPage';
 import AdminDashboard from './components/AdminDashboard';
 import SupervisorDashboard from './components/SupervisorDashboard';
 import ParentDashboard from './components/ParentDashboard';
-import { setAuthToken } from './api';
+import BusTracking from './components/BusTracking';
+import Layout from './components/Layout'; // Import the new Layout
+import api from './api';
+
+const BusTrackingPage = () => {
+  const { busId } = useParams();
+  return <BusTracking role="PARENT" busId={busId} />;
+};
+
+// A protected route component that wraps pages with the layout
+const ProtectedRoute = ({ user, onLogout, children }) => {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return <Layout user={user} onLogout={onLogout}>{children}</Layout>;
+};
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem('admin_token'));
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('admin_token'));
 
   useEffect(() => {
     const storedToken = localStorage.getItem('admin_token');
@@ -15,46 +31,61 @@ function App() {
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
-      setAuthToken(storedToken);
+      api.setAuthToken(storedToken);
     }
   }, []);
 
   const handleLoginSuccess = (newToken, newUser) => {
     localStorage.setItem('admin_token', newToken);
     localStorage.setItem('user', JSON.stringify(newUser));
-    setAuthToken(newToken);
+    api.setAuthToken(newToken);
     setToken(newToken);
     setUser(newUser);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('user');
-    setAuthToken(null);
-    setToken(null);
-    setUser(null);
+  const handleLogout = async () => {
+    try {
+      await api.logout(); // Call the logout API endpoint
+    } catch (error) {
+      console.error('Logout failed', error);
+      // Even if API fails, force logout on the client
+    } finally {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('user');
+      api.setAuthToken(null);
+      setToken(null);
+      setUser(null);
+    }
   };
 
-  const renderDashboard = () => {
-    if (!user) return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-
+  const getDashboardForRole = () => {
+    if (!user) return <Navigate to="/login" />;
     switch (user.role) {
       case 'ADMIN':
-        return <AdminDashboard user={user} onLogout={handleLogout} />;
+        return <AdminDashboard user={user} />;
       case 'SUPERVISOR':
-        return <SupervisorDashboard user={user} onLogout={handleLogout} />;
+        return <SupervisorDashboard user={user} />;
       case 'PARENT':
-        return <ParentDashboard user={user} onLogout={handleLogout} />;
+        return <ParentDashboard user={user} />;
       default:
-        // Handle unknown role or show an error page
-        return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+        return <Navigate to="/login" />;
     }
   };
 
   return (
-    <div>
-      {renderDashboard()}
-    </div>
+    <Routes>
+      <Route path="/login" element={<LoginPage onLoginSuccess={handleLoginSuccess} />} />
+      <Route path="/" element={
+        <ProtectedRoute user={user} onLogout={handleLogout}>
+          {getDashboardForRole()}
+        </ProtectedRoute>
+      } />
+      <Route path="/track/:busId" element={
+        <ProtectedRoute user={user} onLogout={handleLogout}>
+          <BusTrackingPage />
+        </ProtectedRoute>
+      } />
+    </Routes>
   );
 }
 

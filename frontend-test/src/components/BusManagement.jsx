@@ -10,7 +10,7 @@ import {
     DialogContentText
 } from '@mui/material';
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { api } from '../api';
+import api from '../api';
 
 const BusManagement = () => {
     const [buses, setBuses] = useState([]);
@@ -35,7 +35,7 @@ const BusManagement = () => {
 
     const fetchBuses = async () => {
         try {
-            const response = await api.get('/admin/buses');
+            const response = await api.getBuses();
             setBuses(response.data.data.buses);
         } catch (error) {
             console.error("Failed to fetch buses:", error);
@@ -45,7 +45,7 @@ const BusManagement = () => {
 
     const fetchSupervisors = async () => {
       try {
-        const response = await api.get('/admin/users/search?role=SUPERVISOR');
+        const response = await api.searchUsers('SUPERVISOR', "");
         setSupervisors(response.data.data.users);
       } catch (error) {
         console.error("Failed to fetch supervisors:", error);
@@ -126,7 +126,7 @@ const BusManagement = () => {
         console.log(payload);
 
         try {
-            await api.post('/admin/buses', payload);
+            await api.createBus(payload);
             fetchBuses();
             handleCloseDialog();
         } catch (error) {
@@ -157,7 +157,7 @@ const BusManagement = () => {
 
         try {
             if (formData.id) {
-                await api.put(`/admin/buses/${formData.id}`, payload);
+                await api.updateBus(formData.id, payload);
             }
             fetchBuses();
             handleCloseDialog();
@@ -175,7 +175,7 @@ const BusManagement = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this bus?')) {
             try {
-                await api.delete(`/admin/buses/${id}`);
+                await api.deleteBus(id);
                 fetchBuses();
             } catch (error) {
                 console.error("Failed to delete bus:", error);

@@ -17,11 +17,15 @@ const findBusById = (id) => {
     return client.bus.findUnique({ where: { id } });
 };
 
+const findBusBySupervisorId = (supervisorId) => {
+    return client.bus.findUnique({ where: { supervisorId } });
+};
+
 const createBus = (data) => {
     const { supervisorId, ...busData } = data;
     const payload = {
         ...busData,
-        ...(supervisorId && { supervisor: { connect: { id: supervisorId } } }),
+        ...(supervisorId && { supervisor: { connect: { userId: supervisorId } } }),
     };
     return client.bus.create({ data: payload });
 };
@@ -34,7 +38,7 @@ const updateBus = (id, data) => {
 
     if (supervisorId !== undefined) {
         payload.supervisor = supervisorId
-            ? { connect: { id: supervisorId } }
+            ? { connect: { userId: supervisorId } }
             : { disconnect: true };
     }
 
@@ -45,10 +49,18 @@ const deleteBus = (id) => {
     return client.bus.delete({ where: { id } });
 };
 
+const saveLocation = (busId, latitude, longitude) => {
+    return client.locationLog.create({
+        data: { busId, latitude, longitude }
+    });
+};
+
 export default {
     findBuses,
     findBusById,
+    findBusBySupervisorId,
     createBus,
     updateBus,
     deleteBus,
+    saveLocation
 };
