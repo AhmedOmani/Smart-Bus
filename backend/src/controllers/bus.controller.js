@@ -6,6 +6,7 @@ import { broadcastLocationUpdate } from "../services/websocket.service.js";
 
 const saveLocation = asyncHandler(async (req, res) => {
     const { latitude, longitude } = req.validatedData.body;
+    console.log(latitude, longitude);
     const supervisorId = req.user.id;
     const bus = await busRepository.findBusBySupervisorId(supervisorId);
     if (!bus) {
@@ -13,7 +14,15 @@ const saveLocation = asyncHandler(async (req, res) => {
     }
     const location = await busRepository.saveLocation(bus.id, latitude, longitude);
 
-    broadcastLocationUpdate(location);
+    // Create the data structure expected by WebSocket service
+    const locationUpdate = {
+        busId: bus.id,
+        latitude: latitude,
+        longitude: longitude,
+        timestamp: new Date().toISOString()
+    };
+
+    broadcastLocationUpdate(locationUpdate);
 
     return successResponse(res, "Location saved successfully", location, 201);
 });

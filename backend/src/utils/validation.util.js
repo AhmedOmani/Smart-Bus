@@ -177,7 +177,7 @@ export const validateRequest = (schema) => (req, res, next) => {
                 }
             });
         }
-        
+     
         req.validatedData = result.data; // Corrected: assign the whole data object
         next();
     } catch (error) {

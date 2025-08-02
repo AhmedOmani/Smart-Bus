@@ -4,12 +4,15 @@
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
+  engineType = "binary"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+
 
 model User {
   id         String   @id @default(uuid())
@@ -146,7 +149,7 @@ model Bus {
   updatedAt DateTime  @updatedAt
 
 
-  supervisorId String?     @unique
+  supervisorId String?     @unique // References User.id via Supervisor.userId - use main User.id when setting this field
   supervisor   Supervisor? @relation(fields: [supervisorId], references: [userId], onDelete: SetNull) // SetNull is safer
   students     Student[]
   locationLogs LocationLog[] // Add this line to link to the new model

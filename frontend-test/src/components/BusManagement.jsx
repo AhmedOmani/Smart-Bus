@@ -76,7 +76,7 @@ const BusManagement = () => {
     };
 
     const handleOpenDialog = (bus = null) => {
-        setFormData(bus ? { ...bus, supervisorId: bus.supervisor?.id || null, status: bus.status || 'ACTIVE' } : {
+        setFormData(bus ? { ...bus, supervisorId: bus.supervisor?.user?.id || null, status: bus.status || 'ACTIVE' } : {
             busNumber: '',
             capacity: '',
             model: '',
@@ -244,10 +244,10 @@ const BusManagement = () => {
                     </FormControl>
                     <Autocomplete
                         options={supervisors}
-                        getOptionLabel={(option) => `${option.name} (${option.nationalId})`}
-                        value={supervisors.find(s => s.supervisor?.id === newBus.supervisorId) || null}
+                        getOptionLabel={(option) => `${option.name} `}
+                        value={supervisors.find(s => s.id === newBus.supervisorId) || null}
                         onChange={(event, newValue) => {
-                            setNewBus(prev => ({ ...prev, supervisorId: newValue ? newValue.supervisor.id : null }));
+                            setNewBus(prev => ({ ...prev, supervisorId: newValue ? newValue.id : null }));
                         }}
                         isOptionEqualToValue={(option, value) => option.id === value.id}
                         renderInput={(params) => (
@@ -293,9 +293,9 @@ const BusManagement = () => {
                     <Autocomplete
                         options={supervisors}
                         getOptionLabel={(option) => `${option.name} (${option.nationalId})`}
-                        value={supervisors.find(s => s.supervisor?.id === formData.supervisorId) || null}
+                        value={supervisors.find(s => s.id === formData.supervisorId) || null}
                         onChange={(event, newValue) => {
-                            setFormData(prev => ({ ...prev, supervisorId: newValue ? newValue.supervisor.id : null }));
+                            setFormData(prev => ({ ...prev, supervisorId: newValue ? newValue.id : null }));
                         }}
                         isOptionEqualToValue={(option, value) => option.id === value.id}
                         renderInput={(params) => (

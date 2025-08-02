@@ -19,7 +19,7 @@ export const authenticationMiddleware = async (req , res, next) => {
         if (blackListedToken) {
             throw new AuthenticationError("Token has been invalidated");
         }
-
+  
         const decode = jwt.verify(token, JWT_SECRET);
         const user = await client.user.findUnique({
             where: {id: decode.userId}
@@ -30,6 +30,8 @@ export const authenticationMiddleware = async (req , res, next) => {
         }
 
         req.user = user;
+        console.log(req.user.role);
+       
         next();
 
     } catch (error) {
@@ -58,7 +60,9 @@ export const parentMiddleware = async (req , res , next) => {
 }
 
 export const supervisorMiddleware = async (req , res , next) => {
+    console.log("clascmsdcvsd");
     if (req.user.role !== "SUPERVISOR") {
+        console.log("?????????")
         throw new AuthorizationError("Access denied, only supervisor can access this resource");
     }
 }

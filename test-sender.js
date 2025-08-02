@@ -5,8 +5,8 @@ let token ;
 let busId ;
 
 const login = async () => {
-    const username = "ريهامصابررجب";
-    const password = "5cv{J5|0";
+    const username = "omani";
+    const password = ";{2lC,xI";
     try {
         const response = await axios.post(`${BASE_URL}/auth/login`, {
             username,

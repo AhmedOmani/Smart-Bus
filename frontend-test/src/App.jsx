@@ -1,19 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, useParams, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './components/LoginPage';
 import AdminDashboard from './components/AdminDashboard';
 import SupervisorDashboard from './components/SupervisorDashboard';
 import ParentDashboard from './components/ParentDashboard';
-import BusTracking from './components/BusTracking';
 import Layout from './components/Layout'; // Import the new Layout
 import api from './api';
 
-const BusTrackingPage = () => {
-  const { busId } = useParams();
-  return <BusTracking role="PARENT" busId={busId} />;
-};
-
-// A protected route component that wraps pages with the layout
 const ProtectedRoute = ({ user, onLogout, children }) => {
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -78,11 +71,6 @@ function App() {
       <Route path="/" element={
         <ProtectedRoute user={user} onLogout={handleLogout}>
           {getDashboardForRole()}
-        </ProtectedRoute>
-      } />
-      <Route path="/track/:busId" element={
-        <ProtectedRoute user={user} onLogout={handleLogout}>
-          <BusTrackingPage />
         </ProtectedRoute>
       } />
     </Routes>

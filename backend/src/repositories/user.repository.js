@@ -20,6 +20,7 @@ const findUserBySearch = async (where) => {
         orderBy: { name: "asc" }
     });
 }
+
 const createUser = async({ nationalId, name, email, phone, role, username , password , hashedPassword }) => {
     const transaction = await client.$transaction(async (tx) => {
        

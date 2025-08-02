@@ -3,7 +3,7 @@ import { Box, Paper, Tabs, Tab } from '@mui/material';
 import UserManagement from './UserManagement';
 import StudentManagement from './StudentManagement';
 import BusManagement from './BusManagement';
-import BusTracking from './BusTracking';
+import AdminBusTracking from './AdminBusTracking';
 
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -32,7 +32,7 @@ function AdminDashboard() {
                 </Tabs>
             </Box>
             <TabPanel value={tabIndex} index={0}>
-                <BusTracking role="ADMIN" />
+                <AdminBusTracking />
             </TabPanel>
             <TabPanel value={tabIndex} index={1}>
                 <UserManagement />

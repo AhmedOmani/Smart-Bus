@@ -7,11 +7,11 @@ import { JWT_SECRET } from "../config/env.js";
 import userRepository from "../repositories/user.repository.js";
 
 const login = asyncHandler(async (req, res) => {
-    
+    console.log(req.validatedData.body);
     const { username, password } = req.validatedData.body;    
 
     const existingUser = await userRepository.findUserByUsername(username);
-    
+    console.log(existingUser);
     if (!existingUser || existingUser.status !== "ACTIVE") {
         throw new AuthenticationError("User not found");
     }

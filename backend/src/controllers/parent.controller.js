@@ -16,7 +16,7 @@ const getStudents = asyncHandler(async (req , res) => {
 
 const getBus = asyncHandler(async (req , res) => {
     const id = req.user.id ;
-    const bus = await parentRepository.getBusForParent(id);
+    const bus = await parentRepository.getBusForParent(id);                 
     return successResponse(res , { bus } , "Bus fetched successfully");
 });
 

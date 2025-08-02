@@ -31,7 +31,7 @@ const createStudent = async (data) => {
 };
 
 const updateStudent = async (id, data) => {
-    const { busId, ...studentData } = data;
+    const { busId, parentId, ...studentData } = data;
     const payload = {
         ...studentData,
     };
@@ -40,6 +40,10 @@ const updateStudent = async (id, data) => {
         payload.bus = busId
             ? { connect: { id: busId } }
             : { disconnect: true };
+    }
+
+    if (parentId !== undefined) {
+        payload.parent = parentId ? { connect: { userId: parentId } } : {disconnect: true};
     }
 
     return await client.student.update({

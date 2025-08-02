@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { Button, Typography, CircularProgress, Box } from '@mui/material';
+import { Typography, CircularProgress, Box, Alert } from '@mui/material';
+import { useBusTracking } from '../hooks/useBusTracking';
+import MapView from './MapView';
 
 const ParentDashboard = () => {
     const [bus, setBus] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const navigate = useNavigate();
+    const { location, error: trackingError } = useBusTracking({ busId: bus?.id, role: 'PARENT' });
 
     useEffect(() => {
         const fetchBus = async () => {
@@ -23,14 +24,9 @@ const ParentDashboard = () => {
         fetchBus();
     }, []);
 
-    const handleTrackBus = () => {
-        if (bus) {
-            navigate(`/track/${bus.id}`);
-        }
-    };
-
     return (
         <Box>
+            <Typography variant="h4" gutterBottom>Parent Dashboard</Typography>
             {isLoading ? (
                 <CircularProgress />
             ) : bus ? (
@@ -38,7 +34,15 @@ const ParentDashboard = () => {
                     <Typography variant="h6">Your Student's Bus:</Typography>
                     <Typography>Bus Number: {bus.busNumber}</Typography>
                     <Typography>Driver: {bus.driverName}</Typography>
-                    <Button variant="contained" sx={{mt: 2}} onClick={handleTrackBus}>Track Bus</Button>
+                    <Box sx={{ mt: 2, p: 2, border: '1px dashed grey' }}>
+                        <Typography variant="h6">Live Location Data:</Typography>
+                        {trackingError && <Alert severity="error">{trackingError}</Alert>}
+                        {location ? (
+                            <pre>{JSON.stringify(location, null, 2)}</pre>
+                        ) : (
+                            <Typography>Waiting for location update...</Typography>
+                        )}
+                    </Box>
                 </div>
             ) : (
                 <Typography>Your student is not currently assigned to a bus.</Typography>

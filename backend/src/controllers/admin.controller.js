@@ -43,7 +43,6 @@ const getUsersBySearch = asyncHandler(async (req, res) => {
     return successResponse(res, { users }, "Users fetched successfully");
 });
 const createUser = asyncHandler(async (req, res) => {
-    console.log(req.validatedData);
     const { nationalId , name, email, phone, role  } = req.validatedData.body;
 
     const username = await generateUsername(name);
@@ -103,13 +102,12 @@ const getStudents = asyncHandler(async (req, res) => {
     return successResponse(res, { students }, "Students fetched successfully");
 });
 const createStudent = asyncHandler(async (req, res) => {
-    
     const studentData = req.validatedData.body;
-    
     const newStudent = await studentRepository.createStudent(studentData);
     return successResponse(res, { student: newStudent }, "Student created successfully", 201);
 });
 const updateStudent = asyncHandler(async (req, res) => {
+    console.log(req.validatedData);
     const { id } = req.params;
     const studentData = req.validatedData.body;
 
@@ -145,6 +143,7 @@ const createBus = asyncHandler(async (req , res) => {
     return successResponse(res, { bus }, "Bus created successfully", 201);
 });
 const updateBus = asyncHandler(async (req , res) => {
+    console.log(req.validatedData);
     const { id } = req.params;
     const busData = req.validatedData.body;
     console.log(busData);
