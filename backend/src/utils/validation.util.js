@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 // AUTHENTICATION VALIDATION
-
 export const loginSchema = z.object({
     body: z.object({
         username: z.string()
@@ -13,7 +12,6 @@ export const loginSchema = z.object({
             .max(100, "Password must be less than 100 characters")
     })
 });
-
 export const changePasswordSchema = z.object({
     body: z.object({
         currentPassword: z.string()
@@ -38,7 +36,6 @@ const nameValidation = z.string()
         "Name can only contain letters and spaces from supported languages"
     )
     .trim();
-
 export const createUserSchema = z.object({
     body: z.object({
         nationalId: z.string().min(8, "National ID is too short").max(12, "National ID is too long"),
@@ -48,7 +45,6 @@ export const createUserSchema = z.object({
         role: z.enum(['ADMIN', 'SUPERVISOR', 'PARENT']),
     })
 });
-
 export const updateUserSchema = z.object({
     body: z.object({
         nationalId: z.string().min(8).max(12).optional(),
@@ -90,7 +86,6 @@ export const createStudentSchema = z.object({
         homeLongitude: z.number().optional().nullable(),
     })
 });
-
 export const updateStudentSchema = z.object({
     body: z.object({
         name: nameValidation.optional(),
@@ -123,7 +118,6 @@ export const createBusSchema = z.object({
         status: z.enum(['ACTIVE', 'INACTIVE', 'MAINTENANCE']).optional(),
     })
 });
-
 export const updateBusSchema = z.object({
     body: z.object({
         busNumber: z.string().min(1).optional(),
@@ -163,6 +157,52 @@ export const homeLocationSchema = z.object({
 export const fcmTokenSchema = z.object({
     body: z.object({
         fcmToken: z.string().min(1, "FCM token is required")
+    })
+});
+
+// ABSENCE VALIDATION
+export const reportAbsenceSchema = z.object({
+    body: z.object({
+        studentId: z.string().uuid("Invalid student ID"),
+        startDate: z.string().datetime("Invalid start date format"),
+        endDate: z.string().datetime("Invalid end date format"),
+        reason: z.string().max(500, "Reason must be less than 500 characters").optional(),
+        type: z.enum(['SICK', 'PERSONAL', 'SCHOOL_EVENT', 'OTHER'], {
+            errorMap: () => ({ message: "Type must be SICK, PERSONAL, SCHOOL_EVENT, or OTHER" })
+        })
+    }).refine(
+        (data) => new Date(data.startDate) <= new Date(data.endDate),
+        {
+            message: "Start date must be before or equal to end date",
+            path: ["endDate"]
+        }
+    ).refine(
+        (data) => new Date(data.startDate) >= new Date(),
+        {
+            message: "Start date cannot be in the past",
+            path: ["startDate"]
+        }
+    )
+});
+export const updateAbsenceStatusSchema = z.object({
+    body: z.object({
+        status: z.enum(['APPROVED', 'REJECTED'], {
+            errorMap: () => ({ message: "Status must be APPROVED or REJECTED" })
+        }),
+        notes: z.string().max(500, "Notes must be less than 500 characters").optional()
+    }),
+    params: z.object({
+        absenceId: z.string().uuid("Invalid absence ID")
+    })
+});
+export const getAbsenceByIdSchema = z.object({
+    params: z.object({
+        absenceId: z.string().uuid("Invalid absence ID")
+    })
+});
+export const getAbsencesByStudentSchema = z.object({
+    params: z.object({
+        studentId: z.string().uuid("Invalid student ID")
     })
 });
 

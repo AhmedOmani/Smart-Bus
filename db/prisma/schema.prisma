@@ -197,24 +197,36 @@ model LocationLog {
 // New models for enhanced Smart Bus features
 
 model Absence {
-  id        String      @id @default(uuid())
-  studentId String
-  date      DateTime
-  type      AbsenceType
-  reason    String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  
-  student   Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id         String      @id @default(uuid())
+  studentId  String
+  student    Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reportedBy String
+  reportedAt DateTime    @default(now())
+  startDate  DateTime
+  endDate    DateTime
+  reason     String?
+  type       AbsenceType
+  status     AbsenceStatus @default(PENDING)
+  approvedBy String?    //userId of supervisor who approved/rejected
+  approvedAt DateTime?
+  notes      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   @@map("absences")
-  @@index([studentId], name: "idx_absences_student")
-  @@index([date], name: "idx_absences_date")
-  @@index([type], name: "idx_absences_type")
 }
 
 enum AbsenceType {
-  MORNING    // Student absent in morning
+  SICK 
+  PERSONAL
+  SCHOOL_EVENT
+  OTHER
+}
+
+enum AbsenceStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Permission {

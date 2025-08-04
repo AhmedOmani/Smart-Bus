@@ -1,7 +1,7 @@
 import { client } from "../config/db.js";
 
-const findBuses = () => {
-    return client.bus.findMany({
+const findBuses = async () => {
+    return await client.bus.findMany({
         include: {
             supervisor: {
                 include: {
@@ -13,24 +13,24 @@ const findBuses = () => {
     });
 };
 
-const findBusById = (id) => {
-    return client.bus.findUnique({ where: { id } });
+const findBusById = async (id) => {
+    return await client.bus.findUnique({ where: { id } });
 };
 
-const findBusBySupervisorId = (supervisorId) => {
-    return client.bus.findUnique({ where: { supervisorId } });
+const findBusBySupervisorId = async (supervisorId) => {
+    return await client.bus.findUnique({ where: { supervisorId } });
 };
 
-const createBus = (data) => {
+const createBus = async (data) => {
     const { supervisorId, ...busData } = data;
     const payload = {
         ...busData,
         ...(supervisorId && { supervisor: { connect: { userId: supervisorId } } }),
     };
-    return client.bus.create({ data: payload });
+    return await client.bus.create({ data: payload });
 };
 
-const updateBus = (id, data) => {
+const updateBus = async (id, data) => {
     const { supervisorId, ...busData } = data;
     const payload = {
         ...busData,
@@ -42,18 +42,27 @@ const updateBus = (id, data) => {
             : { disconnect: true };
     }
 
-    return client.bus.update({ where: { id }, data: payload });
+    return await client.bus.update({ where: { id }, data: payload });
 };
 
-const deleteBus = (id) => {
-    return client.bus.delete({ where: { id } });
+const deleteBus = async (id) => {
+    return await client.bus.delete({ where: { id } });
 };
 
-const saveLocation = (busId, latitude, longitude) => {
-    return client.locationLog.create({
+const saveLocation = async (busId, latitude, longitude) => {
+    return await client.locationLog.create({
         data: { busId, latitude, longitude }
     });
 };
+
+const findBusOfSupervisorId = async (busId ,supervisorId) => {
+    return await client.bus.findFirst({
+        where: {
+            id: busId,
+            supervisorId: supervisorId
+        }
+    })
+}
 
 export default {
     findBuses,

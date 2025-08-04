@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "absences" ADD COLUMN     "reportedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
