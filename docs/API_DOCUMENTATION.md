@@ -431,4 +431,221 @@ When a supervisor sends a location update via `POST /bus/location`, the server b
     "timestamp": "ISO_8601_timestamp"
   }
 }
-``` 
+```
+
+---
+
+## 5. Enhanced Features
+
+### 5.1. Home Location Management
+
+#### **PUT** `/parent/home-location`
+- **Description**: Updates the parent's home location for proximity-based notifications.
+- **Authorization**: `PARENT`.
+- **Request Body**:
+  ```json
+  {
+    "homeAddress": "String (Required)",
+    "homeLatitude": "Number (Required, -90 to 90)",
+    "homeLongitude": "Number (Required, -180 to 180)"
+  }
+  ```
+- **Validation Rules**:
+  - `homeAddress`: Must be a string, 1-255 characters.
+  - `homeLatitude`: Must be a number between -90 and 90.
+  - `homeLongitude`: Must be a number between -180 and 180.
+- **Successful Response (200)**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "parent": {
+        "id": "parent_id",
+        "homeAddress": "123 Main St",
+        "homeLatitude": 23.5880,
+        "homeLongitude": 58.3829
+      }
+    },
+    "message": "Home location updated successfully"
+  }
+  ```
+
+#### **PUT** `/supervisor/home-location`
+- **Description**: Updates the supervisor's home location for route optimization.
+- **Authorization**: `SUPERVISOR`.
+- **Request Body**: Same as parent home location.
+- **Successful Response (200)**: Same structure as parent endpoint.
+
+### 5.2. Push Notifications (FCM)
+
+#### **PUT** `/parent/fcm-token`
+- **Description**: Updates the parent's Firebase Cloud Messaging token for push notifications.
+- **Authorization**: `PARENT`.
+- **Request Body**:
+  ```json
+  {
+    "fcmToken": "String (Required)"
+  }
+  ```
+- **Validation Rules**:
+  - `fcmToken`: Must be a non-empty string.
+- **Successful Response (200)**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "parent": {
+        "id": "parent_id",
+        "fcmToken": "fcm_token_string"
+      }
+    },
+    "message": "FCM token updated successfully"
+  }
+  ```
+
+### 5.3. Profile Management
+
+#### **GET** `/parent/profile`
+- **Description**: Retrieves the parent's profile information including home location and FCM token.
+- **Authorization**: `PARENT`.
+- **Successful Response (200)**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "parent": {
+        "id": "parent_id",
+        "user": {
+          "id": "user_id",
+          "name": "Parent Name",
+          "email": "parent@example.com",
+          "role": "PARENT"
+        },
+        "homeAddress": "123 Main St",
+        "homeLatitude": 23.5880,
+        "homeLongitude": 58.3829,
+        "fcmToken": "fcm_token_string"
+      }
+    },
+    "message": "Profile retrieved successfully"
+  }
+  ```
+
+#### **GET** `/supervisor/profile`
+- **Description**: Retrieves the supervisor's profile information including home location.
+- **Authorization**: `SUPERVISOR`.
+- **Successful Response (200)**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "supervisor": {
+        "id": "supervisor_id",
+        "user": {
+          "id": "user_id",
+          "name": "Supervisor Name",
+          "email": "supervisor@example.com",
+          "role": "SUPERVISOR"
+        },
+        "homeAddress": "456 Oak Ave",
+        "homeLatitude": 23.5880,
+        "homeLongitude": 58.3829
+      }
+    },
+    "message": "Profile retrieved successfully"
+  }
+  ```
+
+### 5.4. Supervisor Bus Management
+
+#### **GET** `/supervisor/my-bus`
+- **Description**: Retrieves the bus assigned to the currently logged-in supervisor.
+- **Authorization**: `SUPERVISOR`.
+- **Successful Response (200)**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "bus": {
+        "id": "bus_id",
+        "busNumber": "Bus 1",
+        "licensePlate": "ABC123",
+        "capacity": 30,
+        "model": "Toyota",
+        "year": 2020,
+        "driverName": "John Doe",
+        "driverPhone": "+968 12345678",
+        "driverLicenseNumber": "DL123456",
+        "status": "ACTIVE"
+      }
+    },
+    "message": "Bus information retrieved successfully"
+  }
+  ```
+- **Error Response (404)**: If the supervisor is not assigned to any bus.
+
+---
+
+## 6. Error Handling Examples
+
+### Validation Error
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed, please check your input.",
+    "details": [
+      {
+        "field": "homeLatitude",
+        "message": "Invalid latitude value"
+      }
+    ]
+  }
+}
+```
+
+### Authentication Error
+```json
+{
+  "success": false,
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Authentication token is required"
+  }
+}
+```
+
+### Authorization Error
+```json
+{
+  "success": false,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "You do not have permission to access this resource"
+  }
+}
+```
+
+---
+
+## 7. Testing
+
+### WebSocket Testing
+To test WebSocket connections, you can use tools like:
+- **wscat**: `wscat -c "ws://localhost:3001?token=your_jwt_token"`
+- **Postman**: WebSocket support for real-time testing
+- **Browser Console**: Native WebSocket API
+
+### API Testing
+All endpoints can be tested using:
+- **Postman**: REST API testing
+- **curl**: Command-line testing
+- **Jest**: Automated testing (see test files in the project)
+
+### Example Test Flow
+1. **Login**: `POST /auth/login` to get JWT token
+2. **Connect WebSocket**: `ws://localhost:3001?token=jwt_token`
+3. **Subscribe**: Send `{"type": "SUBSCRIBE", "busId": "bus_id"}`
+4. **Update Location**: `POST /bus/location` (as supervisor)
+5. **Receive Updates**: WebSocket broadcasts location updates 

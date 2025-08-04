@@ -34,6 +34,10 @@ model User {
   supervisor Supervisor?
   credentials Credential[]
 
+  // New relations for messaging
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+
   @@map("users")
   @@index([role], name: "idx_users_role")
   @@index([email], name: "idx_users_email")
@@ -49,6 +53,7 @@ model Parent {
   homeAddress   String?
   homeLatitude  Float?
   homeLongitude Float?
+  fcmToken      String?
 
   @@map("parents")
 }
@@ -121,6 +126,9 @@ model Student {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
+  absences    Absence[]
+  permissions Permission[]
+
   @@map("students")
   @@index([parentId], name: "idx_students_parent")
   @@index([busId], name: "idx_students_bus")
@@ -153,6 +161,9 @@ model Bus {
   supervisor   Supervisor? @relation(fields: [supervisorId], references: [userId], onDelete: SetNull) // SetNull is safer
   students     Student[]
   locationLogs LocationLog[] // Add this line to link to the new model
+  
+  // New relation
+  trips       Trip[]
 
   @@map("buses")
   @@index([supervisorId], name: "idx_buses_supervisor")
@@ -172,8 +183,124 @@ model LocationLog {
   timestamp DateTime @default(now())
   bus       Bus      @relation(fields: [busId], references: [id], onDelete: Cascade)
   busId     String
+  
+  // New relation for trip tracking
+  tripId    String?
+  trip      Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
 
   @@map("location_logs")
   @@index([busId], name: "idx_location_logs_bus")
   @@index([timestamp], name: "idx_location_logs_timestamp")
+  @@index([tripId], name: "idx_location_logs_trip")
+}
+
+// New models for enhanced Smart Bus features
+
+model Absence {
+  id        String      @id @default(uuid())
+  studentId String
+  date      DateTime
+  type      AbsenceType
+  reason    String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  
+  student   Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("absences")
+  @@index([studentId], name: "idx_absences_student")
+  @@index([date], name: "idx_absences_date")
+  @@index([type], name: "idx_absences_type")
+}
+
+enum AbsenceType {
+  MORNING    // Student absent in morning
+}
+
+model Permission {
+  id        String           @id @default(uuid())
+  studentId String
+  type      PermissionType
+  date      DateTime
+  reason    String?
+  status    PermissionStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("permissions")
+  @@index([studentId], name: "idx_permissions_student")
+  @@index([date], name: "idx_permissions_date")
+  @@index([status], name: "idx_permissions_status")
+  @@index([type], name: "idx_permissions_type")
+}
+
+enum PermissionType {
+  ARRIVAL  // Parent will take child to school
+  EXIT     // Parent will pick up child from school
+}
+
+enum PermissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Message {
+  id         String      @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String
+  type       MessageType @default(TEXT)
+  isRead     Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  
+  sender     User        @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User        @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+  @@index([senderId], name: "idx_messages_sender")
+  @@index([receiverId], name: "idx_messages_receiver")
+  @@index([isRead], name: "idx_messages_read")
+  @@index([createdAt], name: "idx_messages_created")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  LOCATION
+  SYSTEM
+}
+
+model Trip {
+  id          String    @id @default(uuid())
+  busId       String
+  type        TripType
+  startTime   DateTime?
+  endTime     DateTime?
+  status      TripStatus @default(SCHEDULED)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  bus         Bus       @relation(fields: [busId], references: [id], onDelete: Cascade)
+  locations   LocationLog[]
+
+  @@map("trips")
+  @@index([busId], name: "idx_trips_bus")
+  @@index([type], name: "idx_trips_type")
+  @@index([status], name: "idx_trips_status")
+  @@index([startTime], name: "idx_trips_start_time")
+}
+
+enum TripType {
+  MORNING   // School pickup
+  AFTERNOON // School return
+}
+
+enum TripStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }

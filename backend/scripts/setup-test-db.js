@@ -15,17 +15,17 @@ const DB_PORT = "5432";
 
 async function setupTestDatabase() {
     try {
-        console.log("🔧 Setting up test database...");
+        console.log(" Setting up test database...");
         
         // Create test database if it doesn't exist
-        console.log("📋 Creating test database...");
+        console.log(" Creating test database...");
         try {
             execSync(`createdb -h ${DB_HOST} -p ${DB_PORT} -U ${DB_USER} ${DB_NAME}`, {
                 stdio: 'inherit'
             });
-            console.log(`✅ Created database '${DB_NAME}'`);
+            console.log(` Created database '${DB_NAME}'`);
         } catch (error) {
-            console.log(`ℹ️  Database '${DB_NAME}' might already exist, continuing...`);
+            console.log(`ℹ  Database '${DB_NAME}' might already exist, continuing...`);
         }
         
         // Set test database URL
@@ -33,22 +33,22 @@ async function setupTestDatabase() {
         process.env.DATABASE_URL = testDatabaseUrl;
         
         // Run Prisma migrations on test database
-        console.log("🔄 Running Prisma migrations on test database...");
+        console.log(" Running Prisma migrations on test database...");
         execSync("cd ../db && npx prisma migrate deploy", {
             env: { ...process.env, DATABASE_URL: testDatabaseUrl },
             stdio: 'inherit'
         });
         
-        console.log("✅ Test database setup complete!");
-        console.log(`📍 Test database URL: ${testDatabaseUrl}`);
+        console.log("Test database setup complete!");
+        console.log(` Test database URL: ${testDatabaseUrl}`);
         console.log("");
-        console.log("🔥 Ready to run tests! Use:");
+        console.log(" Ready to run tests! Use:");
         console.log("   npm test");
         console.log("   or");
         console.log("   npm run test:watch");
         
     } catch (error) {
-        console.error("❌ Failed to setup test database:", error.message);
+        console.error("Failed to setup test database:", error.message);
         console.log("");
         console.log("💡 Troubleshooting:");
         console.log("1. Make sure PostgreSQL is running");

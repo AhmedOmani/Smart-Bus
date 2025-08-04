@@ -6,11 +6,10 @@ import { broadcastLocationUpdate } from "../services/websocket.service.js";
 
 const saveLocation = asyncHandler(async (req, res) => {
     const { latitude, longitude } = req.validatedData.body;
-    console.log(latitude, longitude);
     const supervisorId = req.user.id;
     const bus = await busRepository.findBusBySupervisorId(supervisorId);
     if (!bus) {
-        throw new NotFoundError("You are not assigned to a bus.");
+        throw new NotFoundError("You are not assigned to bus.");
     }
     const location = await busRepository.saveLocation(bus.id, latitude, longitude);
 
@@ -24,7 +23,7 @@ const saveLocation = asyncHandler(async (req, res) => {
 
     broadcastLocationUpdate(locationUpdate);
 
-    return successResponse(res, "Location saved successfully", location, 201);
+    return successResponse(res, location, "Location saved successfully", 201);
 });
 
 export default {

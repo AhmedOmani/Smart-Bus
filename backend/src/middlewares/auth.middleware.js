@@ -30,7 +30,7 @@ export const authenticationMiddleware = async (req , res, next) => {
         }
 
         req.user = user;
-        console.log(req.user.role);
+        console.log(user);
        
         next();
 
@@ -60,9 +60,7 @@ export const parentMiddleware = async (req , res , next) => {
 }
 
 export const supervisorMiddleware = async (req , res , next) => {
-    console.log("clascmsdcvsd");
     if (req.user.role !== "SUPERVISOR") {
-        console.log("?????????")
         throw new AuthorizationError("Access denied, only supervisor can access this resource");
     }
 }

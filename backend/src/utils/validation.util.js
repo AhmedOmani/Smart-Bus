@@ -150,6 +150,22 @@ export const saveLocationSchema = z.object({
     })
 });
 
+// Home Location Validation Schema
+export const homeLocationSchema = z.object({
+    body: z.object({
+        homeAddress: z.string().min(1, "Home address is required"),
+        homeLatitude: z.number().min(-90).max(90, "Invalid latitude"),
+        homeLongitude: z.number().min(-180).max(180, "Invalid longitude")
+    })
+});
+
+// FCM Token Validation Schema
+export const fcmTokenSchema = z.object({
+    body: z.object({
+        fcmToken: z.string().min(1, "FCM token is required")
+    })
+});
+
 // ========================================
 // VALIDATION MIDDLEWARE
 // ========================================

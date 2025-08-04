@@ -23,7 +23,6 @@ const findUserBySearch = async (where) => {
 
 const createUser = async({ nationalId, name, email, phone, role, username , password , hashedPassword }) => {
     const transaction = await client.$transaction(async (tx) => {
-       
         const user = await tx.user.create({
             data: { nationalId, name, email, phone, role, username, password: hashedPassword }
         });
@@ -49,9 +48,10 @@ const createUser = async({ nationalId, name, email, phone, role, username , pass
 }
         
 const findUserByUsername = async(username) => {
-    return await client.user.findUnique({
+    const user = await client.user.findUnique({
         where: { username }
     });
+    return user;
 }
 
 const findUserById = async(id) => {

@@ -56,10 +56,16 @@ const handleConnection = async (ws, req) => {
         const user = websocketAuth(token);
         ws.user = user;
 
-        console.log(`Client connected: user ${user.userId}, role ${user.role}`);
+        if (process.env.NODE_ENV !== 'test') {
+            console.log(`Client connected: user ${user.userId}, role ${user.role}`);
+        }
 
         ws.on("message", (message) => handleMessage(ws, message));
-        ws.on('close', () => console.log(`Client ${user.userId} has disconnected`));
+        ws.on('close', () => {
+            if (process.env.NODE_ENV !== 'test') {
+                console.log(`Client ${user.userId} has disconnected`);
+            }
+        });
         ws.on('error', (error) => console.error(`WebSocket error for user ${user.userId}:`, error));
 
     } catch (error) {
@@ -85,10 +91,8 @@ export const broadcastLocationUpdate = (locationData) => {
         type: 'LOCATION_UPDATE',
         payload: locationData
     });
-    console.log(message);
     
     wss.clients.forEach(client => {
-        console.log(client.isAdmin, client.busId, locationData.busId);
         if (client.readyState === client.OPEN) {
             if (client.isAdmin || client.busId === locationData.busId) {
                 client.send(message);

@@ -27,8 +27,10 @@ import { initWebSocketServer } from "./services/websocket.service.js";
 const app = express();
 const server = http.createServer(app);
 
-// Trust proxy since we're behind React dev server proxy
-app.set('trust proxy', true);
+// Trust proxy only in production or when behind a proxy
+if (process.env.NODE_ENV === 'production' || process.env.TRUST_PROXY === 'true') {
+    app.set('trust proxy', true);
+}
 
 app.use((req, res, next) => {
     req.requestId = uuidv4();

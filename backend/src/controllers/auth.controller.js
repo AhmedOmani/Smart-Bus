@@ -9,12 +9,14 @@ import userRepository from "../repositories/user.repository.js";
 const login = asyncHandler(async (req, res) => {
     console.log(req.validatedData.body);
     const { username, password } = req.validatedData.body;    
-
+    console.log(username , password);
+    console.log("--------------------------------");
     const existingUser = await userRepository.findUserByUsername(username);
-    console.log(existingUser);
     if (!existingUser || existingUser.status !== "ACTIVE") {
         throw new AuthenticationError("User not found");
     }
+    console.log("--------------------------------");
+    console.log(existingUser);
 
     const isPasswordValid = await bcrypt.compare(password, existingUser.password);
 
@@ -40,11 +42,11 @@ const login = asyncHandler(async (req, res) => {
 
 const logout = asyncHandler(async(req , res) => {     
     const token = req.headers["authorization"]?.split(" ")[1];
-    console.log(token);
+    
     if (!token) {
         throw new AuthenticationError("Token is required");
     }
-    console.log(req.user.id);
+    
 
     await userRepository.updateUserLogout(req.user.id , token); 
 

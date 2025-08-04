@@ -41,4 +41,64 @@ const getBusForParent = async (parentId) => {
     return bus;
 }
 
-export default { getDashboard , getStudents , getBusForParent };
+const updateHomeLocation = async (parentId, homeAddress, homeLatitude, homeLongitude) => {
+    return await client.parent.update({
+        where: { id: parentId },
+        data: {
+            homeAddress,
+            homeLatitude,
+            homeLongitude
+        },
+        include: {
+            user: true
+        }
+    });
+};
+
+const updateFcmToken = async (parentId, fcmToken) => {
+    return await client.parent.update({
+        where: { id: parentId },
+        data: { fcmToken },
+        include: {
+            user: true
+        }
+    });
+};
+
+const getParentById = async (parentId) => {
+    return await client.parent.findUnique({
+        where: { id: parentId },
+        include: {
+            user: true,
+            students: {
+                include: {
+                    bus: true
+                }
+            }
+        }
+    });
+};
+
+const getParentByUserId = async (userId) => {
+    return await client.parent.findUnique({
+        where: { userId },
+        include: {
+            user: true,
+            students: {
+                include: {
+                    bus: true
+                }
+            }
+        }
+    });
+};
+
+export default { 
+    getDashboard, 
+    getStudents, 
+    getBusForParent, 
+    updateHomeLocation, 
+    updateFcmToken, 
+    getParentById,
+    getParentByUserId
+};

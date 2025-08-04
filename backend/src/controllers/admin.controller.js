@@ -26,7 +26,6 @@ const getUsers = asyncHandler(async (req, res) => {
 });
 const getUsersBySearch = asyncHandler(async (req, res) => {
     const { role, status, search } = req.query;
-    console.log(req.query);
     const where = {};
     if (role) where.role = role;
     if (status) where.status = status;
@@ -107,7 +106,6 @@ const createStudent = asyncHandler(async (req, res) => {
     return successResponse(res, { student: newStudent }, "Student created successfully", 201);
 });
 const updateStudent = asyncHandler(async (req, res) => {
-    console.log(req.validatedData);
     const { id } = req.params;
     const studentData = req.validatedData.body;
 
@@ -138,15 +136,12 @@ const getBuses = asyncHandler(async (req , res) => {
 });
 const createBus = asyncHandler(async (req , res) => {
     const busData = req.validatedData.body;
-    console.log(busData);
     const bus = await busRepository.createBus(busData);
     return successResponse(res, { bus }, "Bus created successfully", 201);
 });
 const updateBus = asyncHandler(async (req , res) => {
-    console.log(req.validatedData);
     const { id } = req.params;
     const busData = req.validatedData.body;
-    console.log(busData);
     const bus = await busRepository.updateBus(id , busData);
     return successResponse(res, { bus }, "Bus updated successfully");
 });
