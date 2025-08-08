@@ -234,5 +234,57 @@ describe("Authentication Tests", () => {
 
             expect(response.status).toBe(401);
         });
+
+        test("should reject subsequent requests with blacklisted token", async () => {
+            // token was logged out in previous test
+            const meResponse = await request(app)
+                .get("/api/v1/auth/me")
+                .set("Authorization", `Bearer ${validToken}`);
+            expect(meResponse.status).toBe(401);
+        });
+    });
+
+    describe("Change Password", () => {
+        let token;
+        const username = "abeer";
+        const oldPassword = "admin123";
+        const newPassword = "New_Pass123"; // meets schema (>=8, mixed case + digit)
+
+        beforeAll(async () => {
+            await clearAllTables();
+            await seedAdminUser();
+            const auth = await authenticateAdmin();
+            token = auth.token;
+        });
+
+        test("should reject with invalid current password", async () => {
+            const res = await request(app)
+                .post("/api/v1/auth/change-password")
+                .set("Authorization", `Bearer ${token}`)
+                .send({ currentPassword: "WrongPass123", newPassword });
+            expect(res.status).toBe(401);
+        });
+
+        test("should change password and allow login with new password; old fails", async () => {
+            // Change
+            const changeRes = await request(app)
+                .post("/api/v1/auth/change-password")
+                .set("Authorization", `Bearer ${token}`)
+                .send({ currentPassword: oldPassword, newPassword });
+            expect(changeRes.status).toBe(200);
+
+            // Old password should fail
+            const oldLogin = await request(app)
+                .post("/api/v1/auth/login")
+                .send({ username, password: oldPassword });
+            expect(oldLogin.status).toBe(401);
+
+            // New password should succeed
+            const newLogin = await request(app)
+                .post("/api/v1/auth/login")
+                .send({ username, password: newPassword });
+            expect(newLogin.status).toBe(200);
+            expect(newLogin.body.data).toHaveProperty("token");
+        });
     });
 }); 
