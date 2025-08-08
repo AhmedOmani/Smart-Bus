@@ -160,7 +160,7 @@ export const fcmTokenSchema = z.object({
     })
 });
 
-// ABSENCE VALIDATION
+//ABSENCE VALIDATION
 export const reportAbsenceSchema = z.object({
     body: z.object({
         studentId: z.string().uuid("Invalid student ID"),
@@ -204,6 +204,29 @@ export const getAbsencesByStudentSchema = z.object({
     params: z.object({
         studentId: z.string().uuid("Invalid student ID")
     })
+});
+
+//PERMISSION VALIDATION
+export const requestPermissionSchema = z.object({
+    body: z.object({
+      studentId: z.string().uuid(),
+      date: z.string().datetime(),
+      type: z.enum(["ARRIVAL","EXIT"]),
+      reason: z.string().max(500, "Reason must be less than 500 characters").optional(),
+    }).refine(({ date }) => new Date(date) > new Date(), { message: "Permission date must be in the future", path: ["date"] })
+});
+export const updatePermissionStatusSchema = z.object({
+    params: z.object({ permissionId: z.string().uuid() }),
+    body: z.object({
+      status: z.enum(["APPROVED","REJECTED"]),
+      notes: z.string().max(500).optional()
+    })
+});
+export const getPermissionByIdSchema = z.object({
+    params: z.object({ permissionId: z.string().uuid() })
+});
+export const getPermissionsByStudentSchema = z.object({
+    params: z.object({ studentId: z.string().uuid() })
 });
 
 // ========================================

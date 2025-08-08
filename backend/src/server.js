@@ -23,6 +23,7 @@ import parentRoutes from "./routes/parent.route.js";
 import busRoutes from "./routes/bus.routes.js";
 import supervisorRoutes from "./routes/supervisor.routes.js";
 import absenceRoutes from "./routes/absence.routes.js";
+import permissionRoutes from "./routes/permission.routes.js";
 import { initWebSocketServer } from "./services/websocket.service.js";
 
 const app = express();
@@ -54,7 +55,7 @@ app.use("/api/v1/parent", parentRoutes);
 app.use("/api/v1/bus", busRoutes);
 app.use("/api/v1/supervisor", supervisorRoutes);
 app.use("/api/v1/absence" , absenceRoutes);
-
+app.use("/api/v1/permissions" , permissionRoutes);
 app.use(globalErrorHandler);
 
 app.get('/health', (req, res) => {

@@ -73,7 +73,7 @@ const createAbsence = async (data) => {
         }
         return createAbsenceInternal(data, tx);
     });
-}
+};
 
 const getAbsenceById = async (id) => {
     return await client.absence.findUnique({
@@ -89,14 +89,13 @@ const getAbsenceById = async (id) => {
             }
         }
     });
-}
-
+};
 const getAbsencesByStudent = async (studentId) => {
     return await client.absence.findMany({
         where: {studentId},
         orderBy: {startDate: "desc"}
     });
-}
+};
 
 const getPendingAbsencesForSupervisor = async (supervisorId) => {
     return await client.absence.findMany({
@@ -118,7 +117,7 @@ const getPendingAbsencesForSupervisor = async (supervisorId) => {
         },
         orderBy: {reportedAt: "desc"}
     });
-}
+};
 
 const updateAbsenceStatus = async (id , approvedBy , status, notes) => {
     return await client.absence.update({
@@ -130,16 +129,13 @@ const updateAbsenceStatus = async (id , approvedBy , status, notes) => {
             notes
         }
     })
-}
+};
 
 const deleteAbsence = async (id) => {
     return await client.absence.delete({
         where: {id}
     });
-}
-
-
-
+};
 
 export default {
     createAbsence,
