@@ -41,10 +41,10 @@ const getPendingPermissionsForSupervisor = (supervisorId) =>
       orderBy: { date: "asc" }
     });
 
-const updatePermissionStatus = (id, approvedBy, status, notes) =>
+const updatePermissionStatus = (id, status) =>
     client.permission.update({
           where: { id },
-          data: { status, approvedBy, approvedAt: new Date(), notes }
+          data: { status }
     });
 
 export default {

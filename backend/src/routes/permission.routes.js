@@ -1,7 +1,7 @@
 import express from "express";
 import permissionController from "../controllers/permission.controller.js";
-import { authenticationMiddleware } from "../middlewares/authentication.middleware.js";
-import { validateRequest } from "../middlewares/validation.middleware.js";
+import { authenticationMiddleware } from "../middlewares/auth.middleware.js";
+import { validateRequest } from "../utils/validation.util.js";
 import { requestPermissionSchema, updatePermissionStatusSchema, getPermissionByIdSchema, getPermissionsByStudentSchema } from "../utils/validation.util.js";
 
 const permissionRoutes = express.Router();
@@ -9,7 +9,7 @@ const permissionRoutes = express.Router();
 permissionRoutes.use(authenticationMiddleware);
 
 //Parent
-permissionRoutes.post("/", validateRequest(requestPermissionSchema), permissionController.requestPermission);
+permissionRoutes.post("/report", validateRequest(requestPermissionSchema), permissionController.requestPermission);
 permissionRoutes.get("/student/:studentId", validateRequest(getPermissionsByStudentSchema), permissionController.getPermissionsByStudent);
 
 //Supervisor

@@ -3,22 +3,30 @@ import studentRepository from "../repositories/student.repository.js";
 import busRepository from "../repositories/bus.repository.js";
 import { asyncHandler } from "../utils/asyncHandler.util.js";
 import { successResponse } from "../utils/response.util.js";
+import { ApiError } from "../utils/errors.util.js";
 
+const normalizeDate = (date) => {
+    const dateObj = new Date(date);
+    return new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+}
 const requestPermission = asyncHandler(async (req, res) => {
-    const { studentId, date, type, reason } = req.validatedBody.body;
+    const { studentId, date, type, reason } = req.validatedData.body;
     const parentId = req.user.id;
-
+       
     const student = await studentRepository.findStudentByParentId(studentId, parentId);
+    console.log("student: " , student);
     if (!student) throw new ApiError("Student not found or not authorized to the parent", 404);
+    console.log("--------------asdasd--------------");
+    const normalizedDate = normalizeDate(date);
 
     const permission = await permissionRepository.createPermission({
         studentId,
-        date: new Date(date),
+        date: normalizedDate,
         type,
         reason
     });
 
-    return successResponse(res, "Permission requested successfully", permission);
+    return successResponse(res, permission, "Permission requested successfully" , 201);
 });
 
 const getPermissionsByStudent = asyncHandler(async (req, res) => {
@@ -40,7 +48,7 @@ const getPendingPermissions = asyncHandler(async (req, res) => {
 
 const updatePermissionStatus = asyncHandler(async (req, res) => {
     const { permissionId } = req.validatedData.params;
-    const { status, notes } = req.validatedData.body;
+    const { status } = req.validatedData.body;
     const supervisorId = req.user.id;
   
     const supervisorBus = await busRepository.findBusBySupervisorId(supervisorId);
@@ -50,13 +58,16 @@ const updatePermissionStatus = asyncHandler(async (req, res) => {
     const perm = await permissionRepository.getPermissionById(permissionId);
     if (!perm) throw new ApiError("Permission not found", 404);
     
-    const studentBus = await client.student.findUnique({ where: { id: perm.studentId }, select: { busId: true } });
+    console.log("--------------before--------------");
+    const studentBus = await studentRepository.findBusByStudentId(perm.studentId);
     if (!studentBus || studentBus.busId !== supervisorBus.id) throw new ApiError("Not authorized to update this permission", 403);
-  
-    const updatedPermission = await permissionRepository.updatePermissionStatus(permissionId, supervisorId, status, notes);
+    console.log("--------------after--------------");
+    const updatedPermission = await permissionRepository.updatePermissionStatus(permissionId, status);
+    console.log("updatedPermission: " , updatedPermission);
     return successResponse(res, updatedPermission, "Permission status updated successfully", 200);
 });
 
+//SHARED for all roles
 const getPermissionById = asyncHandler(async (req, res) => {
     const { permissionId } = req.validatedData.params;
     const userId = req.user.id;
@@ -67,14 +78,14 @@ const getPermissionById = asyncHandler(async (req, res) => {
   
     if (role === "PARENT") {
         const student = await studentRepository.findStudentByParentId(perm.studentId, userId);
-        if (!student) throw new ApiError("Not authorized to view this permission", 403);
+        if (!student) throw new ApiError("Not authorized to view this permission, YOU ARE NOT THE PARENT OF THIS STUDENT", 403);
     } else if (role === "SUPERVISOR") {
         //Check if the permission belongs to the supervisor's bus
         const bus = await busRepository.findBusBySupervisorId(userId);
         if (!bus) throw new ApiError("Bus not found for this supervisor", 404);
       
-        const studentBus = await client.student.findUnique({ where: { id: perm.studentId }, select: { busId: true } });
-        if (!studentBus || studentBus.busId !== bus.id) throw new ApiError("Not authorized to view this permission", 403);
+        const studentBus = await studentRepository.findBusByStudentId(perm.studentId);
+        if (!studentBus || studentBus.busId !== bus.id) throw new ApiError("Not authorized to view this permission, YOU ARE NOT THE SUPERVISOR OF THIS BUS", 403);
     }
 
     return successResponse(res, perm, "Permission retrieved successfully", 200);

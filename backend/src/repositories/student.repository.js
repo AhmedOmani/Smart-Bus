@@ -29,6 +29,15 @@ const findStudentByParentId = async (studentId , parentId) =>  {
     })
 }
 
+const findBusByStudentId = async (studentId) => {
+    return await client.student.findUnique({
+        where: { id: studentId },
+        select: {
+            busId: true
+        }
+    })
+}
+
 const createStudent = async (data) => {
     const { busId, ...studentData } = data;
     return await client.student.create({
@@ -72,6 +81,7 @@ export default {
     findStudents,
     findStudentById,
     findStudentByParentId,
+    findBusByStudentId,
     createStudent,
     updateStudent,
     deleteStudent,

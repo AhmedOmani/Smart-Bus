@@ -213,7 +213,12 @@ export const requestPermissionSchema = z.object({
       date: z.string().datetime(),
       type: z.enum(["ARRIVAL","EXIT"]),
       reason: z.string().max(500, "Reason must be less than 500 characters").optional(),
-    }).refine(({ date }) => new Date(date) > new Date(), { message: "Permission date must be in the future", path: ["date"] })
+    }).refine(({ date }) => {
+        const requested = new Date(date);
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        return requested >= startOfToday;
+    }, { message: "Permission date must be in the future", path: ["date"] })
 });
 export const updatePermissionStatusSchema = z.object({
     params: z.object({ permissionId: z.string().uuid() }),
@@ -258,8 +263,12 @@ export const validateRequest = (schema) => (req, res, next) => {
                 }
             });
         }
+
+        console.log(result.data);
      
-        req.validatedData = result.data; // Corrected: assign the whole data object
+        req.validatedData = result.data;
+        console.log("rrr: " , req.validatedData.body);
+        // Corrected: assign the whole data object
         next();
     } catch (error) {
         next(error);
