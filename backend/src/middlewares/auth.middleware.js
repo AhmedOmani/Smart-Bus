@@ -29,9 +29,8 @@ export const authenticationMiddleware = async (req , res, next) => {
             throw new AuthenticationError("Invalid or inactive user");
         }
 
+
         req.user = user;
-        console.log(user);
-       
         next();
 
     } catch (error) {

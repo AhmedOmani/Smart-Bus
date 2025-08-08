@@ -1,42 +1,7 @@
 import { client } from "../../src/config/db.js";
 import bcrypt from "bcrypt";
-
-// Global test setup
-beforeAll(async () => {
-    console.log("Setting up test environment...");
-    try {
-        // Clear all data and seed admin user
-        await clearAllTables();
-        await seedAdminUser();
-        console.log("Test environment setup complete");
-    } catch (error) {
-        console.error("Test environment setup failed:", error);
-        throw error;
-    }
-}, 30000);
-
-// Clean up after each test
-afterEach(async () => {
-    console.log("Cleaning up after test...");
-    try {
-        await clearDataButKeepUsers();
-        console.log("Test cleanup completed");
-    } catch (error) {
-        console.error("Test cleanup failed:", error);
-    }
-}, 10000);
-
-// Global cleanup
-afterAll(async () => {
-    console.log("Cleaning up test environment...");
-    try {
-        await clearAllTables();
-        await client.$disconnect();
-        console.log("Test environment cleanup complete");
-    } catch (error) {
-        console.error("Test environment cleanup failed:", error);
-    }
-}, 30000);
+// NOTE: Global hooks were removed to prevent cross-file test interference.
+// Import and call the helpers below explicitly inside each test file's hooks.
 
 export const clearAllTables = async () => {
     console.log("Clearing all tables...");
@@ -60,6 +25,36 @@ export const clearAllTables = async () => {
     }
 };
 
+
+export const seedAdminUser = async () => {
+    console.log("Seeding admin user...");
+    try {
+        if (!client || !client.user) {
+            throw new Error("Database client not available");
+        }
+
+        const hashedPassword = await bcrypt.hash("admin123", 10);
+        await client.user.upsert({
+            where: { username: "abeer" },
+            update: {},
+            create: {
+                nationalId: "ADMIN123456789",
+                name: "Admin User",
+                email: "alahd@gmail.com",
+                phone: "+968 99177838",
+                role: "ADMIN",
+                username: "abeer",
+                password: hashedPassword,
+                status: "ACTIVE"
+            }
+        });
+        console.log("Admin user ensured (upsert)");
+    } catch (error) {
+        console.error("Error seeding admin user:", error);
+        throw error;
+    }
+}; 
+
 export const clearDataButKeepUsers = async () => {
     console.log("Clearing data but keeping users...");
     try {
@@ -78,37 +73,11 @@ export const clearDataButKeepUsers = async () => {
     }
 };
 
-export const seedAdminUser = async () => {
-    console.log("Seeding admin user...");
+export const disconnectTestDB = async () => {
     try {
-        if (!client || !client.user) {
-            throw new Error("Database client not available");
-        }
-
-        const existingAdmin = await client.user.findUnique({
-            where: { username: "abeer" }
-        });
-
-        if (!existingAdmin) {
-            const hashedPassword = await bcrypt.hash("admin123", 10);
-            await client.user.create({
-                data: {
-                    nationalId: "ADMIN123456789",
-                    name: "Admin User",
-                    email: "alahd@gmail.com",
-                    phone: "+968 99177838",
-                    role: "ADMIN",
-                    username: "abeer",
-                    password: hashedPassword,
-                    status: "ACTIVE"
-                }
-            });
-            console.log("Admin user created successfully");
-        } else {
-            console.log("Admin user already exists");
-        }
+        await client.$disconnect();
+        console.log("Test DB disconnected");
     } catch (error) {
-        console.error("Error seeding admin user:", error);
-        throw error;
+        console.error("Error disconnecting test DB:", error);
     }
-}; 
+};

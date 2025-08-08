@@ -1,25 +1,77 @@
-import { client} from "../config/db.js";
+import { client } from "../config/db.js";
 
-const createAbsence = async (data) => {
-    return await client.absence.create({
+/*
+   - WE DONT CREATE ABSENCE DIRECTLY, WE MAKE SURE THAT THERE IS NO OVERLAPPING ABSENCE BEFORE CREATING IT
+   - WHAT DOES THIS MEAN?
+   - Two absence records for the same student whose date ranges intersect. Formally, ranges [startA, endA] and [startB, endB] overlap if startA ≤ endB and startB ≤ endA.
+   - Example 1 (identical):
+        Absence A: 2025-09-10 → 2025-09-12
+        Absence B: 2025-09-10 → 2025-09-12
+        Overlap: full range (duplicate)
+
+   - Example 2 (partial overlap):
+        Absence A: 2025-09-10 → 2025-09-12
+        Absence B: 2025-09-11 → 2025-09-13
+        Overlap: 2025-09-11 → 2025-09-12
+
+   - Example 3 (edge-day overlap):
+        Absence A: 2025-09-10 → 2025-09-10
+        Absence B: 2025-09-10 → 2025-09-11
+        Overlap: 2025-09-10
+
+    - SO WE NEED TO CHECK FOR OVERLAPPING ABSENCES BEFORE CREATING A NEW ONE, WHICH WHAT WE ARE DOING.
+
+    - ANOTHER QUESTION WHY WE USER "FOR UPDATE" IN ROW QUERY ?
+    - ANSWER:
+        - What happens with two concurrent requests for the same student and dates:
+            - Request A acquires the student row lock first, finds no overlapping record, inserts, commits.
+            - Request B is blocked on the row lock. After A commits, B acquires the lock, runs the overlap query, now finds A’s record, and throws 409 instead of inserting a duplicate.
+        - Why the lock matters:
+            - Without the row lock, both A and B could check “no overlap” at the same time and both insert, producing duplicates (classic race condition). The lock serializes them.
+*/
+const createAbsenceInternal = async (data , transaction) => {
+    return transaction.absence.create({
         data: {
-            studentId: data.studentId,
-            reportedBy: data.reportedBy,
-            startDate: data.startDate,
-            endDate: data.endDate,
-            reason: data.reason,
-            type: data.type,
+          studentId: data.studentId,
+          reportedBy: data.reportedBy,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          reason: data.reason,
+          type: data.type,
         },
         include: {
-            student: {
-                include: {
-                    parent: {
-                        include: {user: true}
-                    },
-                    bus: true
-                }
-            }
+          student: {
+            include: {
+              parent: { include: { user: true } },
+              bus: true,
+            },
+          },
+        },
+    });
+};
+const findOverlappingAbsence = async (transaction , studentId , startDate, endDate) => {
+    return transaction.absence.findFirst({
+        where : {
+            studentId,
+            status: {not: "REJECTED"},
+            startDate: {lte: endDate},
+            endDate: {gte: startDate}
         }
+    });
+};
+const createAbsence = async (data) => {
+    return client.$transaction(async (tx) => {
+        //Serialize requests per student to avoid race conditions
+        await tx.$queryRaw`SELECT id FROM "students" WHERE id =${data.studentId} FOR UPDATE`;
+
+        const overlapping = await findOverlappingAbsence(tx , data.studentId , data.startDate , data.endDate);
+        if (overlapping) {
+            const err = new Error("Overlapping issue! absence already exists for this period");
+            err.statusCode = 409;
+            err.errorCode = "CONFLICT";
+            throw err;
+        }
+        return createAbsenceInternal(data, tx);
     });
 }
 
@@ -46,7 +98,7 @@ const getAbsencesByStudent = async (studentId) => {
     });
 }
 
-const getPendingAbsences = async (supervisorId) => {
+const getPendingAbsencesForSupervisor = async (supervisorId) => {
     return await client.absence.findMany({
         where: {
             status: "PENDING",
@@ -86,11 +138,14 @@ const deleteAbsence = async (id) => {
     });
 }
 
+
+
+
 export default {
     createAbsence,
     getAbsenceById,
     getAbsencesByStudent,
-    getPendingAbsences,
+    getPendingAbsencesForSupervisor,
     updateAbsenceStatus,
     deleteAbsence
 }

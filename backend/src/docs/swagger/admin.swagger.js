@@ -425,3 +425,488 @@
  *       500:
  *         description: Internal Server Error
  */
+
+/**
+ * @swagger
+ * /api/v1/admin/users/search:
+ *   get:
+ *     summary: Search users with query parameters
+ *     description: Search and filter users by role, status, and search term
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [ADMIN, PARENT, SUPERVISOR]
+ *         description: Filter users by role
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [ACTIVE, INACTIVE]
+ *         description: Filter users by status
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term for name, email, or username
+ *     responses:
+ *       200:
+ *         description: Users retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UsersListResponse'
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Student:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *         nationalId:
+ *           type: string
+ *         name:
+ *           type: string
+ *         grade:
+ *           type: string
+ *         homeAddress:
+ *           type: string
+ *         homeLatitude:
+ *           type: number
+ *         homeLongitude:
+ *           type: number
+ *         status:
+ *           type: string
+ *           enum: [ACTIVE, INACTIVE]
+ *         parentId:
+ *           type: string
+ *           format: uuid
+ *         busId:
+ *           type: string
+ *           format: uuid
+ *         parent:
+ *           $ref: '#/components/schemas/Parent'
+ *         bus:
+ *           $ref: '#/components/schemas/Bus'
+ *     
+ *     CreateStudentRequest:
+ *       type: object
+ *       required:
+ *         - name
+ *         - nationalId
+ *         - grade
+ *         - parentId
+ *       properties:
+ *         name:
+ *           type: string
+ *           minLength: 3
+ *           maxLength: 100
+ *         nationalId:
+ *           type: string
+ *           minLength: 1
+ *         grade:
+ *           type: string
+ *           minLength: 1
+ *         parentId:
+ *           type: string
+ *           format: uuid
+ *         busId:
+ *           type: string
+ *           format: uuid
+ *         homeAddress:
+ *           type: string
+ *         homeLatitude:
+ *           type: number
+ *         homeLongitude:
+ *           type: number
+ *     
+ *     Bus:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *           format: uuid
+ *         busNumber:
+ *           type: string
+ *         licensePlate:
+ *           type: string
+ *         capacity:
+ *           type: integer
+ *         model:
+ *           type: string
+ *         year:
+ *           type: integer
+ *         driverName:
+ *           type: string
+ *         driverPhone:
+ *           type: string
+ *         driverLicenseNumber:
+ *           type: string
+ *         supervisorId:
+ *           type: string
+ *           format: uuid
+ *         status:
+ *           type: string
+ *           enum: [ACTIVE, INACTIVE, MAINTENANCE]
+ *         supervisor:
+ *           $ref: '#/components/schemas/Supervisor'
+ *         students:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Student'
+ *     
+ *     CreateBusRequest:
+ *       type: object
+ *       required:
+ *         - busNumber
+ *         - capacity
+ *       properties:
+ *         busNumber:
+ *           type: string
+ *           minLength: 1
+ *         licensePlate:
+ *           type: string
+ *         capacity:
+ *           type: integer
+ *           minimum: 1
+ *         model:
+ *           type: string
+ *         year:
+ *           type: integer
+ *           minimum: 1900
+ *         driverName:
+ *           type: string
+ *         driverPhone:
+ *           type: string
+ *         driverLicenseNumber:
+ *           type: string
+ *         supervisorId:
+ *           type: string
+ *           format: uuid
+ *         status:
+ *           type: string
+ *           enum: [ACTIVE, INACTIVE, MAINTENANCE]
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/students:
+ *   get:
+ *     summary: Get all students
+ *     description: Retrieve a list of all students
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Students retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     students:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Student'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal Server Error
+ *   
+ *   post:
+ *     summary: Create a new student
+ *     description: Create a new student record
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateStudentRequest'
+ *     responses:
+ *       201:
+ *         description: Student created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Student'
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/students/{id}:
+ *   put:
+ *     summary: Update a student
+ *     description: Update student information
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Student ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateStudentRequest'
+ *     responses:
+ *       200:
+ *         description: Student updated successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Student not found
+ *       500:
+ *         description: Internal Server Error
+ *   
+ *   delete:
+ *     summary: Delete a student
+ *     description: Delete a student record
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Student ID
+ *     responses:
+ *       204:
+ *         description: Student deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Student not found
+ *       500:
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/buses:
+ *   get:
+ *     summary: Get all buses
+ *     description: Retrieve a list of all buses
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Buses retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     buses:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Bus'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal Server Error
+ *   
+ *   post:
+ *     summary: Create a new bus
+ *     description: Create a new bus record
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateBusRequest'
+ *     responses:
+ *       201:
+ *         description: Bus created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/Bus'
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/buses/{id}:
+ *   put:
+ *     summary: Update a bus
+ *     description: Update bus information
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Bus ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateBusRequest'
+ *     responses:
+ *       200:
+ *         description: Bus updated successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Bus not found
+ *       500:
+ *         description: Internal Server Error
+ *   
+ *   delete:
+ *     summary: Delete a bus
+ *     description: Delete a bus record
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Bus ID
+ *     responses:
+ *       204:
+ *         description: Bus deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Bus not found
+ *       500:
+ *         description: Internal Server Error
+ */
+
+/**
+ * @swagger
+ * /api/v1/admin/supervisors:
+ *   get:
+ *     summary: Get all supervisors
+ *     description: Retrieve a list of all supervisors
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Supervisors retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     supervisors:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Supervisor'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal Server Error
+ */

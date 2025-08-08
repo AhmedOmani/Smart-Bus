@@ -1,16 +1,25 @@
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-for-testing';
 import request from "supertest";
 import app from "../../src/server.js";
 import { authenticateAdmin, createSupervisor, createParent, authenticateUser } from "../setup/testUtils.js";
+import { clearAllTables, seedAdminUser, disconnectTestDB } from "../setup/testSetup.js";
 
 describe("Authentication Tests", () => {
     let adminToken;
     let adminUser;
 
     beforeAll(async () => {
+        await clearAllTables();
+        await seedAdminUser();
         // Authenticate admin for user creation tests
         const adminAuth = await authenticateAdmin();
         adminToken = adminAuth.token;
         adminUser = adminAuth.user;
+    });
+
+    afterAll(async () => {
+        await clearAllTables();
+        await disconnectTestDB();
     });
 
     describe("Admin Authentication", () => {
@@ -153,10 +162,14 @@ describe("Authentication Tests", () => {
         let parentCredentials;
 
         beforeAll(async () => {
-            // Create users for authentication tests with unique emails
+            // Ensure fresh state and admin session for this block
+            await clearAllTables();
+            await seedAdminUser();
+            const freshAdmin = await authenticateAdmin();
+            adminToken = freshAdmin.token;
+
             const supervisor = await createSupervisor(adminToken);
             const parent = await createParent(adminToken);
-            
             supervisorCredentials = supervisor.credentials;
             parentCredentials = parent.credentials;
         });

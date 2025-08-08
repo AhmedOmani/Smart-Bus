@@ -55,14 +55,6 @@ const saveLocation = async (busId, latitude, longitude) => {
     });
 };
 
-const findBusOfSupervisorId = async (busId ,supervisorId) => {
-    return await client.bus.findFirst({
-        where: {
-            id: busId,
-            supervisorId: supervisorId
-        }
-    })
-}
 
 export default {
     findBuses,

@@ -8,7 +8,7 @@ export const authenticateAdmin = async () => {
             username: "abeer",
             password: "admin123"
         });
-    
+    console.log(loginResponse.body);
     if (loginResponse.status !== 200) {
         throw new Error(`Admin login failed: ${loginResponse.status}`);
     }
@@ -20,11 +20,11 @@ export const authenticateAdmin = async () => {
 };
 
 export const createSupervisor = async (adminToken) => {
-    const timestamp = Date.now();
+    const timestamp = `${Date.now()}${Math.floor(Math.random()*100000)}`;
     const supervisorData = {
-        name: "Test Supervisor", // Valid name with only letters and spaces
+        name: "Reham", // Valid name with only letters and spaces
         nationalId: `SUP${timestamp.toString().slice(-8)}`, // 8-12 characters
-        email: `supervisor${timestamp}@test.com`, // Unique email
+        email: `Reham${timestamp}@gmail.com`, // Unique email
         phone: "+968 99177848", // Valid phone format
         role: "SUPERVISOR"
     };
@@ -46,11 +46,11 @@ export const createSupervisor = async (adminToken) => {
 };
 
 export const createParent = async (adminToken) => {
-    const timestamp = Date.now();
+    const timestamp = `${Date.now()}${Math.floor(Math.random()*100000)}`;
     const parentData = {
-        name: "Test Parent", // Valid name with only letters and spaces
+        name: "Ahmed", // Valid name with only letters and spaces
         nationalId: `PAR${timestamp.toString().slice(-8)}`, // 8-12 characters
-        email: `parent${timestamp}@test.com`, // Unique email
+        email: `Ahmed${timestamp}@gmail.com`, // Unique email
         phone: "+968 99177838", // Valid phone format
         role: "PARENT"
     };

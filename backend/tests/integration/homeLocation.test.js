@@ -1,6 +1,8 @@
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-for-testing';
 import request from "supertest";
 import app from "../../src/server.js";
 import { authenticateAdmin, createSupervisor, createParent } from "../setup/testUtils.js";
+import { clearAllTables, seedAdminUser, disconnectTestDB } from "../setup/testSetup.js";
 
 describe("Home Location Tests", () => {
     let adminToken;
@@ -8,6 +10,8 @@ describe("Home Location Tests", () => {
     let parentToken;
 
     beforeAll(async () => {
+        await clearAllTables();
+        await seedAdminUser();
         // Authenticate admin and create users
         const adminAuth = await authenticateAdmin();
         adminToken = adminAuth.token;
@@ -31,6 +35,11 @@ describe("Home Location Tests", () => {
                 password: parent.credentials.password
             });
         parentToken = parentLogin.body.data.token;
+    });
+
+    afterAll(async () => {
+        await clearAllTables();
+        await disconnectTestDB();
     });
 
     describe("Supervisor Home Location", () => {

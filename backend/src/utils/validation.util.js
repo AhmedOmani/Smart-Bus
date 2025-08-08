@@ -224,6 +224,8 @@ export const validateRequest = (schema) => (req, res, next) => {
                 message: issue.message
             }));
 
+            console.log("Validation errors:", validationErrors);
+
             return res.status(400).json({
                 success: false,
                 error: {

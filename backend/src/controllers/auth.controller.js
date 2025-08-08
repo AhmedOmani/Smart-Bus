@@ -8,21 +8,23 @@ import userRepository from "../repositories/user.repository.js";
 
 const login = asyncHandler(async (req, res) => {
     console.log(req.validatedData.body);
-    const { username, password } = req.validatedData.body;    
-    console.log(username , password);
     console.log("--------------------------------");
+    const { username, password } = req.validatedData.body;    
+
     const existingUser = await userRepository.findUserByUsername(username);
     if (!existingUser || existingUser.status !== "ACTIVE") {
         throw new AuthenticationError("User not found");
     }
-    console.log("--------------------------------");
     console.log(existingUser);
+    console.log("--------------------------------");
 
     const isPasswordValid = await bcrypt.compare(password, existingUser.password);
 
     if (!isPasswordValid) {
         throw new AuthenticationError("Invalid username or password");
     }
+
+    console.log("JWT_SECRET" , JWT_SECRET);
 
     await userRepository.updateUserLogin(existingUser.id, {lastLoginAt: new Date()});
 

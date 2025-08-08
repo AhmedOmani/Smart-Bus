@@ -1,7 +1,9 @@
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-for-testing';
 import request from "supertest";
 import app from "../../src/server.js";
 import { authenticateAdmin, createSupervisor, createParent } from "../setup/testUtils.js";
 import { initWebSocketServer } from "../../src/services/websocket.service.js";
+import { clearAllTables, seedAdminUser, disconnectTestDB } from "../setup/testSetup.js";
 
 describe("Bus Tracking Tests", () => {
     let adminToken;
@@ -12,18 +14,19 @@ describe("Bus Tracking Tests", () => {
     let server;
 
     beforeAll(async () => {
-        // Initialize WebSocket server
+        await clearAllTables();
+        await seedAdminUser();
         server = app.listen(0);
         initWebSocketServer(server);
 
-        // Authenticate admin and create users
+        
         const adminAuth = await authenticateAdmin();
         adminToken = adminAuth.token;
 
         const supervisor = await createSupervisor(adminToken);
         const parent = await createParent(adminToken);
 
-        // Authenticate supervisor and parent
+       
         const supervisorLogin = await request(app)
             .post("/api/v1/auth/login")
             .send({
@@ -45,6 +48,8 @@ describe("Bus Tracking Tests", () => {
         if (server) {
             server.close();
         }
+        await clearAllTables();
+        await disconnectTestDB();
     });
 
     describe("Bus Management", () => {
@@ -157,23 +162,30 @@ describe("Bus Tracking Tests", () => {
             (async () => {
                 const WebSocket = (await import("ws")).default;
                 const port = server.address().port;
-                
+
+                let finished = false;
+                const safeDone = (err) => {
+                    if (finished) return;
+                    finished = true;
+                    if (timeoutId) clearTimeout(timeoutId);
+                    done(err);
+                };
+
                 const ws = new WebSocket(`ws://localhost:${port}?token=${adminToken}`);
-                
+
                 ws.on('open', () => {
-                    // Connection established successfully
                     ws.close();
-                    done();
-                });
-                
-                ws.on('error', (error) => {
-                    done(error);
+                    safeDone();
                 });
 
-                // Timeout after 5 seconds
-                setTimeout(() => {
-                    ws.close();
-                    done(new Error("WebSocket connection timeout"));
+                ws.on('error', (error) => {
+                    try { ws.close(); } catch {}
+                    safeDone(error);
+                });
+
+                const timeoutId = setTimeout(() => {
+                    try { ws.close(); } catch {}
+                    safeDone(new Error("WebSocket connection timeout"));
                 }, 5000);
             })();
         }, 10000);
@@ -182,23 +194,30 @@ describe("Bus Tracking Tests", () => {
             (async () => {
                 const WebSocket = (await import("ws")).default;
                 const port = server.address().port;
-                
+
+                let finished = false;
+                const safeDone = (err) => {
+                    if (finished) return;
+                    finished = true;
+                    if (timeoutId) clearTimeout(timeoutId);
+                    done(err);
+                };
+
                 const ws = new WebSocket(`ws://localhost:${port}?token=${parentToken}`);
-                
+
                 ws.on('open', () => {
-                    // Connection established successfully
                     ws.close();
-                    done();
-                });
-                
-                ws.on('error', (error) => {
-                    done(error);
+                    safeDone();
                 });
 
-                // Timeout after 5 seconds
-                setTimeout(() => {
-                    ws.close();
-                    done(new Error("WebSocket connection timeout"));
+                ws.on('error', (error) => {
+                    try { ws.close(); } catch {}
+                    safeDone(error);
+                });
+
+                const timeoutId = setTimeout(() => {
+                    try { ws.close(); } catch {}
+                    safeDone(new Error("WebSocket connection timeout"));
                 }, 5000);
             })();
         }, 10000);
@@ -207,22 +226,31 @@ describe("Bus Tracking Tests", () => {
             (async () => {
                 const WebSocket = (await import("ws")).default;
                 const port = server.address().port;
-                
+
+                let finished = false;
+                const safeDone = (err) => {
+                    if (finished) return;
+                    finished = true;
+                    if (timeoutId) clearTimeout(timeoutId);
+                    done(err);
+                };
+
                 const ws = new WebSocket(`ws://localhost:${port}`);
-                
+
                 ws.on('close', (code) => {
+                    try { ws.close(); } catch {}
                     expect(code).toBe(1008);
-                    done();
-                });
-                
-                ws.on('error', (error) => {
-                    done(error);
+                    safeDone();
                 });
 
-                // Timeout after 5 seconds
-                setTimeout(() => {
-                    ws.close();
-                    done(new Error("WebSocket connection timeout"));
+                ws.on('error', (error) => {
+                    try { ws.close(); } catch {}
+                    safeDone(error);
+                });
+
+                const timeoutId = setTimeout(() => {
+                    try { ws.close(); } catch {}
+                    safeDone(new Error("WebSocket connection timeout"));
                 }, 5000);
             })();
         }, 10000);
@@ -236,6 +264,13 @@ describe("Bus Tracking Tests", () => {
                 
                 let adminReceived = false;
                 let parentReceived = false;
+                let finished = false;
+                const safeDone = (err) => {
+                    if (finished) return;
+                    finished = true;
+                    if (timeoutId) clearTimeout(timeoutId);
+                    done(err);
+                };
                 
                 // Connect admin
                 const adminWs = new WebSocket(`ws://localhost:${port}?token=${adminToken}`);
@@ -270,11 +305,16 @@ describe("Bus Tracking Tests", () => {
                     if (adminReceived && parentReceived) {
                         adminWs.close();
                         parentWs.close();
-                        done();
+                        safeDone();
                     }
                 };
                 
                 // Send location update
+                const timeoutId = setTimeout(() => {
+                    try { adminWs.close(); parentWs.close(); } catch {}
+                    safeDone(new Error("WebSocket broadcast timeout"));
+                }, 8000);
+
                 setTimeout(async () => {
                     const locationData = {
                         latitude: 23.5880,
@@ -287,6 +327,6 @@ describe("Bus Tracking Tests", () => {
                         .send(locationData);
                 }, 1000);
             })();
-        }, 10000);
+        }, 15000);
     });
 }); 
