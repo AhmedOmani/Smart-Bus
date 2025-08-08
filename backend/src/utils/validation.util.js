@@ -128,7 +128,7 @@ export const updateBusSchema = z.object({
         driverName: z.string().optional().nullable(),
         driverPhone: z.string().optional().nullable(),
         driverLicenseNumber: z.string().optional().nullable(),
-        supervisorId: z.string().uuid("Invalid supervisor ID").optional(),
+        supervisorId: z.string().uuid("Invalid supervisor ID").optional().nullable(),
         status: z.enum(['ACTIVE', 'INACTIVE', 'MAINTENANCE']).optional(),
     }).partial(),
     params: z.object({
@@ -232,6 +232,28 @@ export const getPermissionByIdSchema = z.object({
 });
 export const getPermissionsByStudentSchema = z.object({
     params: z.object({ studentId: z.string().uuid() })
+});
+
+// ADMIN LISTING QUERIES
+export const adminAbsencesQuerySchema = z.object({
+    query: z.object({
+        status: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
+        type: z.enum(['SICK', 'PERSONAL', 'SCHOOL_EVENT', 'OTHER']).optional(),
+        studentId: z.string().uuid().optional(),
+        busId: z.string().uuid().optional(),
+        startDate: z.string().datetime().optional(),
+        endDate: z.string().datetime().optional()
+    })
+});
+export const adminPermissionsQuerySchema = z.object({
+    query: z.object({
+        status: z.enum(['PENDING', 'APPROVED', 'REJECTED']).optional(),
+        type: z.enum(['ARRIVAL', 'EXIT']).optional(),
+        studentId: z.string().uuid().optional(),
+        busId: z.string().uuid().optional(),
+        startDate: z.string().datetime().optional(),
+        endDate: z.string().datetime().optional()
+    })
 });
 
 // ========================================

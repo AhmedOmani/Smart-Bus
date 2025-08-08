@@ -1,7 +1,7 @@
 import express from "express";
 import adminController from "../controllers/admin.controller.js";
 import { authenticationMiddleware , adminMiddleware } from "../middlewares/auth.middleware.js";
-import { validateRequest,  createUserSchema, updateUserSchema ,createStudentSchema ,updateStudentSchema , userQuerySchema , createBusSchema , updateBusSchema} from "../utils/validation.util.js";
+import { validateRequest,  createUserSchema, updateUserSchema ,createStudentSchema ,updateStudentSchema , userQuerySchema , createBusSchema , updateBusSchema, adminAbsencesQuerySchema, adminPermissionsQuerySchema} from "../utils/validation.util.js";
 
 const adminRoutes = express.Router();
 
@@ -31,5 +31,9 @@ adminRoutes.delete("/buses/:id" , adminController.deleteBus);
 
 //Supervisor Management
 adminRoutes.get("/supervisors" , adminController.getSupervisors);
+
+// Admin Absences & Permissions
+adminRoutes.get("/absences", validateRequest(adminAbsencesQuerySchema), adminController.getAllAbsences);
+adminRoutes.get("/permissions", validateRequest(adminPermissionsQuerySchema), adminController.getAllPermissions);
 
 export default adminRoutes;

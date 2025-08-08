@@ -8,6 +8,8 @@ import userRepository from "../repositories/user.repository.js";
 import studentRepository from "../repositories/student.repository.js";
 import busRepository from "../repositories/bus.repository.js";
 import supervisorRepository from "../repositories/supervisor.repository.js";
+import absenceRepository from "../repositories/absence.repository.js";
+import permissionRepository from "../repositories/permission.repository.js";
 
 const getAdminDashboard = asyncHandler(async (req, res) => {
     const [users, students, activeBuses] = await Promise.all([
@@ -161,6 +163,19 @@ const getSupervisors = asyncHandler(async (req , res) => {
     return successResponse(res, { supervisors }, "Supervisors fetched successfully");
 });
 
+// Admin: Absences & Permissions listing
+const getAllAbsences = asyncHandler(async (req, res) => {
+    const { status, type, studentId, busId, startDate, endDate } = req.validatedData.query;
+    const list = await absenceRepository.findAbsencesForAdmin({ status, type, studentId, busId, startDate, endDate });
+    return successResponse(res, { absences: list }, "Absences fetched successfully", 200);
+});
+
+const getAllPermissions = asyncHandler(async (req, res) => {
+    const { status, type, studentId, busId, startDate, endDate } = req.validatedData.query;
+    const list = await permissionRepository.findPermissionsForAdmin({ status, type, studentId, busId, startDate, endDate });
+    return successResponse(res, { permissions: list }, "Permissions fetched successfully", 200);
+});
+
 export default {
     getAdminDashboard,
     getUsers,
@@ -177,4 +192,6 @@ export default {
     updateBus,
     deleteBus,
     getSupervisors,
+    getAllAbsences,
+    getAllPermissions
 };

@@ -137,11 +137,37 @@ const deleteAbsence = async (id) => {
     });
 };
 
+const findAbsencesForAdmin = async (filters = {}) => {
+    const where = {};
+    if (filters.status) where.status = filters.status;
+    if (filters.type) where.type = filters.type;
+    if (filters.studentId) where.studentId = filters.studentId;
+    if (filters.busId) where.student = { busId: filters.busId };
+
+    // Overlap any portion of [startDate, endDate]
+    if (filters.startDate || filters.endDate) {
+        const start = filters.startDate ? new Date(filters.startDate) : null;
+        const end = filters.endDate ? new Date(filters.endDate) : null;
+        where.AND = where.AND || [];
+        if (end) where.AND.push({ startDate: { lte: end } });
+        if (start) where.AND.push({ endDate: { gte: start } });
+    }
+
+    return client.absence.findMany({
+        where,
+        orderBy: { reportedAt: "desc" },
+        include: {
+            student: { include: { parent: { include: { user: true } }, bus: true } }
+        }
+    });
+};
+
 export default {
     createAbsence,
     getAbsenceById,
     getAbsencesByStudent,
     getPendingAbsencesForSupervisor,
     updateAbsenceStatus,
-    deleteAbsence
+    deleteAbsence,
+    findAbsencesForAdmin
 }

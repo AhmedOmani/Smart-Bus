@@ -47,10 +47,31 @@ const updatePermissionStatus = (id, status) =>
           data: { status }
     });
 
+const findPermissionsForAdmin = async (filters = {}) => {
+    const where = {};
+    if (filters.status) where.status = filters.status;
+    if (filters.type) where.type = filters.type;
+    if (filters.studentId) where.studentId = filters.studentId;
+    if (filters.busId) where.student = { busId: filters.busId };
+    if (filters.startDate || filters.endDate) {
+        where.date = {};
+        if (filters.startDate) where.date.gte = new Date(filters.startDate);
+        if (filters.endDate) where.date.lte = new Date(filters.endDate);
+    }
+    return client.permission.findMany({
+        where,
+        orderBy: { date: "desc" },
+        include: {
+            student: { include: { parent: { include: { user: true } }, bus: true } }
+        }
+    });
+};
+
 export default {
     createPermission,
     getPermissionById,
     getPermissionsByStudent,
     getPendingPermissionsForSupervisor,
-    updatePermissionStatus
+    updatePermissionStatus,
+    findPermissionsForAdmin
 }
