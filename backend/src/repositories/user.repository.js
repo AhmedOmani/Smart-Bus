@@ -105,6 +105,31 @@ const deleteUser = async (id) => {
     })
 }
 
+const getAllCredentials = async () => {
+    return await client.credential.findMany({
+        where: {
+            isActive: true
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    status: true,
+                    nationalId: true,
+                    createdAt: true,
+                    lastLoginAt: true
+                }
+            }
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    })
+}
+
 export default {
     findUsers,
     findUserBySearch,
@@ -115,5 +140,6 @@ export default {
     findUserById,
     updateUserPassword,
     updateUser,
-    deleteUser
+    deleteUser,
+    getAllCredentials
 }

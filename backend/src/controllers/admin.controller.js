@@ -176,6 +176,12 @@ const getAllPermissions = asyncHandler(async (req, res) => {
     return successResponse(res, { permissions: list }, "Permissions fetched successfully", 200);
 });
 
+// Credentials Management
+const getAllCredentials = asyncHandler(async (req, res) => {
+    const credentials = await userRepository.getAllCredentials();
+    return successResponse(res, { credentials }, "Credentials fetched successfully", 200);
+});
+
 export default {
     getAdminDashboard,
     getUsers,
@@ -193,5 +199,6 @@ export default {
     deleteBus,
     getSupervisors,
     getAllAbsences,
-    getAllPermissions
+    getAllPermissions,
+    getAllCredentials
 };

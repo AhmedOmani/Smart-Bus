@@ -36,4 +36,7 @@ adminRoutes.get("/supervisors" , adminController.getSupervisors);
 adminRoutes.get("/absences", validateRequest(adminAbsencesQuerySchema), adminController.getAllAbsences);
 adminRoutes.get("/permissions", validateRequest(adminPermissionsQuerySchema), adminController.getAllPermissions);
 
+// Credentials Management
+adminRoutes.get("/credentials", adminController.getAllCredentials);
+
 export default adminRoutes;

@@ -47,8 +47,22 @@ const getSupervisorByUserId = async (userId) => {
     });
 };
 
+const findSupervisors = async () => {
+    return await client.supervisor.findMany({
+        include: {
+            user: true,
+            bus: {
+                include: {
+                    students: true
+                }
+            }
+        }
+    });
+};
+
 export default {
     updateHomeLocation,
     getSupervisorById,
-    getSupervisorByUserId
+    getSupervisorByUserId,
+    findSupervisors
 };

@@ -71,6 +71,7 @@ const changePassword = asyncHandler(async (req , res) => {
 
     const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
+        console.log("Invalid current password");
         throw new AuthenticationError("Invalid current password");
     }
 

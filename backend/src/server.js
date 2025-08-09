@@ -67,14 +67,14 @@ app.get('/health', (req, res) => {
     });
 });
 //comment it when testing
-/*
+
 server.listen(PORT , async () => {
     console.log(`Smart Bus server is running on PORT ${PORT}`);
     console.log("Enviroment:" , process.env.NODE_ENV);
     await connectToDB();
     initWebSocketServer(server);
 });
-*/
+
 
 export default server;
 
