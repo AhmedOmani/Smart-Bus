@@ -142,6 +142,7 @@ export class ApiAdminRepository extends AdminRepository {
   async getSupervisors() {
     try {
       const response = await api.get('/admin/supervisors')
+      console.log('🌐 ApiAdminRepository: Supervisors response:', response.data)
       return response.data.data.supervisors
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to get supervisors')
@@ -187,6 +188,16 @@ export class ApiAdminRepository extends AdminRepository {
     } catch (error) {
       console.error('🌐 ApiAdminRepository: Credentials error:', error)
       throw new Error(error.response?.data?.message || 'Failed to get credentials')
+    }
+  }
+
+  // Bus Tracking
+  async getBusesWithLocations() {
+    try {
+      const response = await api.get('/admin/buses/locations')
+      return response.data.data.buses
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to get buses locations')
     }
   }
 }

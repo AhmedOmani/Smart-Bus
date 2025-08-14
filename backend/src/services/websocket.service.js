@@ -92,11 +92,18 @@ export const broadcastLocationUpdate = (locationData) => {
         payload: locationData
     });
     
+    console.log('📡 Broadcasting to WebSocket clients...');
+    let sentCount = 0;
+    
     wss.clients.forEach(client => {
         if (client.readyState === client.OPEN) {
             if (client.isAdmin || client.busId === locationData.busId) {
                 client.send(message);
+                sentCount++;
+                console.log(`📤 Sent to client: role=${client.user?.role}, userId=${client.user?.userId}`);
             }
         }
     });
+    
+    console.log(`📊 Broadcast complete: sent to ${sentCount} clients`);
 }; 

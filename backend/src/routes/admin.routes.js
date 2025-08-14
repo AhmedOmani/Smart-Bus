@@ -25,6 +25,7 @@ adminRoutes.delete("/students/:id" , adminController.deleteStudent);
 
 //Bus Management
 adminRoutes.get("/buses" , adminController.getBuses);
+adminRoutes.get("/buses/locations" , adminController.getBusesWithLocations);
 adminRoutes.post("/buses" , validateRequest(createBusSchema) , adminController.createBus);
 adminRoutes.put("/buses/:id" , validateRequest(updateBusSchema) , adminController.updateBus);
 adminRoutes.delete("/buses/:id" , adminController.deleteBus);

@@ -21,7 +21,9 @@ const saveLocation = asyncHandler(async (req, res) => {
         timestamp: new Date().toISOString()
     };
 
+    console.log('🚌 Broadcasting location update:', locationUpdate);
     broadcastLocationUpdate(locationUpdate);
+    console.log('✅ Location broadcast completed');
 
     return successResponse(res, location, "Location saved successfully", 201);
 });

@@ -78,4 +78,9 @@ export class AdminRepository {
   async getAllCredentials() {
     throw new Error('Method not implemented')
   }
+
+  // Bus Tracking
+  async getBusesWithLocations() {
+    throw new Error('Method not implemented')
+  }
 }

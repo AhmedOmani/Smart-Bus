@@ -1,7 +1,7 @@
 import { useAdminDashboard } from '../../hooks/useAdminDashboard.js'
 import { LoadingSpinner } from '../common/LoadingSpinner.jsx'
 import { ErrorMessage } from '../common/ErrorMessage.jsx'
-import { Users, GraduationCap, Bus, AlertCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Users, GraduationCap, Bus, AlertCircle, TrendingUp, TrendingDown, Minus, MapPin } from 'lucide-react'
 
 // Presentation Component - Dashboard Stats
 export const DashboardStats = () => {
@@ -51,6 +51,13 @@ export const DashboardStats = () => {
       icon: AlertCircle,
       iconColor: 'text-yellow-400',
       iconBg: 'bg-yellow-500/20'
+    },
+    {
+      title: 'الحافلات الأونلاين',
+      value: stats?.onlineBuses || 0,
+      icon: MapPin,
+      iconColor: 'text-orange-400',
+      iconBg: 'bg-orange-500/20'
     }
   ]
 

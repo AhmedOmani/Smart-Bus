@@ -8,37 +8,32 @@ import { BusesManagement } from './presentation/pages/admin/BusesManagement.jsx'
 import { ReportsManagement } from './presentation/pages/admin/ReportsManagement.jsx'
 import { CredentialsManagement } from './presentation/pages/admin/CredentialsManagement.jsx'
 import { SettingsManagement } from './presentation/pages/admin/SettingsManagement.jsx'
+import { BusTracking } from './presentation/pages/admin/BusTracking.jsx'
 import { ProtectedRoute } from './presentation/routing/ProtectedRoute.jsx'
 
 function App() {
   return (
     <Routes>
-      {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
-      
-      {/* Protected Admin Routes */}
-      <Route 
-        path="/admin" 
+      <Route
+        path="/admin"
         element={
           <ProtectedRoute requiredRole="ADMIN">
             <AdminLayout />
           </ProtectedRoute>
         }
-                  >
-              <Route path="dashboard" element={<AdminDashboard />} />
-              <Route path="users" element={<UsersManagement />} />
-              <Route path="buses" element={<BusesManagement />} />
-              <Route path="students" element={<StudentsManagement />} />
-              <Route path="reports" element={<ReportsManagement />} />
-              <Route path="credentials" element={<CredentialsManagement />} />
-              <Route path="settings" element={<SettingsManagement />} />
-              <Route index element={<Navigate to="dashboard" replace />} />
-            </Route>
-
-      {/* Root redirect */}
+      >
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<UsersManagement />} />
+        <Route path="buses" element={<BusesManagement />} />
+        <Route path="students" element={<StudentsManagement />} />
+        <Route path="reports" element={<ReportsManagement />} />
+        <Route path="credentials" element={<CredentialsManagement />} />
+        <Route path="settings" element={<SettingsManagement />} />
+        <Route path="tracking" element={<BusTracking />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+      </Route>
       <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-      
-      {/* Catch all */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )

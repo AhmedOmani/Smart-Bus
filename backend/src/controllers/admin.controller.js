@@ -138,12 +138,28 @@ const getBuses = asyncHandler(async (req , res) => {
 });
 const createBus = asyncHandler(async (req , res) => {
     const busData = req.validatedData.body;
+    
+    // Prevent assigning a supervisor who is already assigned to another bus
+    if (busData.supervisorId) {
+        const existing = await busRepository.findBusBySupervisorId(busData.supervisorId);
+        if (existing) {
+            throw new ApiError(409, "Supervisor is already assigned to another bus");
+        }
+    }
     const bus = await busRepository.createBus(busData);
     return successResponse(res, { bus }, "Bus created successfully", 201);
 });
 const updateBus = asyncHandler(async (req , res) => {
     const { id } = req.params;
     const busData = req.validatedData.body;
+    
+    // If trying to assign a supervisor, ensure that supervisor is not already assigned elsewhere
+    if (busData.supervisorId) {
+        const existing = await busRepository.findBusBySupervisorId(busData.supervisorId);
+        if (existing && existing.id !== id) {
+            throw new ApiError(409, "Supervisor is already assigned to another bus");
+        }
+    }
     const bus = await busRepository.updateBus(id , busData);
     return successResponse(res, { bus }, "Bus updated successfully");
 });
@@ -155,6 +171,19 @@ const deleteBus = asyncHandler(async (req , res) => {
     }
     await busRepository.deleteBus(id);
     return successResponse(res, null, "Bus deleted successfully", 204);
+});
+const getBusesWithLocations = asyncHandler(async (req, res) => {
+  const THRESHOLD_MS = 60 * 1000; // 60 seconds
+  const now = Date.now();
+
+  const buses = await busRepository.findBusesWithLocation();
+
+  const mapped = buses.map(b => {
+    const online = b.lastLocation ? (now - new Date(b.lastLocation.timestamp).getTime() <= THRESHOLD_MS) : false;
+    return { ...b, online };
+  });
+
+  return successResponse(res, { buses: mapped }, "Buses with last locations fetched successfully", 200);
 });
 
 //Supervisor Management
@@ -200,5 +229,6 @@ export default {
     getSupervisors,
     getAllAbsences,
     getAllPermissions,
-    getAllCredentials
+    getAllCredentials,
+    getBusesWithLocations
 };

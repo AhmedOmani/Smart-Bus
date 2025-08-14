@@ -12,7 +12,8 @@ import {
   LogOut, 
   Menu, 
   X,
-  School
+  School,
+  MapPin
 } from 'lucide-react'
 
 // Presentation Component - Admin Layout
@@ -33,6 +34,7 @@ export const AdminLayout = () => {
     { to: '/admin/students', icon: GraduationCap, label: 'الطلاب' },
     { to: '/admin/reports', icon: FileBarChart, label: 'التقارير' },
     { to: '/admin/credentials', icon: KeyRound, label: 'بيانات المستخدمين' },
+    { to: '/admin/tracking', icon: MapPin, label: 'تتبع الحافلات' },
     { to: '/admin/settings', icon: Settings, label: 'الإعدادات' }
   ]
 

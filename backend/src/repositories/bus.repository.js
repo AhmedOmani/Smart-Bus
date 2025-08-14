@@ -9,7 +9,11 @@ const findBuses = async () => {
                 }
             },
             students: true
-        }
+        },
+        orderBy: [
+            { createdAt: 'asc' },
+            { busNumber: 'asc' }
+        ]
     });
 };
 
@@ -55,6 +59,44 @@ const saveLocation = async (busId, latitude, longitude) => {
     });
 };
 
+//Find the latest location log for each bus
+const findBusesWithLocation = async () => {
+    const buses = await client.bus.findMany({
+        include: {
+            supervisor: { 
+                include: {
+                    user: true
+                }
+            },
+            locationLogs: {
+                orderBy: { timestamp: "desc" },
+                take: 1
+            }
+        },
+        orderBy: [{ createdAt: "asc" } , { busNumber: "asc"}]
+    });
+
+    return buses.map(bus => {
+        const last = bus.locationLogs[0] || null;
+        return {
+            id: bus.id,
+            busNumber: bus.busNumber,
+            status: bus.status,
+            supervisor: bus.supervisor ? {
+                user: {
+                    id: bus.supervisor.user.id,
+                    name: bus.supervisor.user.name,
+                    email: bus.supervisor.user.email
+                }
+            } : null,
+            lastLocation: last ? {
+                latitude: last.latitude,
+                longitude: last.longitude,
+                timestamp: last.timestamp
+            } : null
+        };
+    });
+};
 
 export default {
     findBuses,
@@ -63,5 +105,6 @@ export default {
     createBus,
     updateBus,
     deleteBus,
-    saveLocation
+    saveLocation,
+    findBusesWithLocation
 };

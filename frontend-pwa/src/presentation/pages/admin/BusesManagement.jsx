@@ -110,7 +110,7 @@ export const BusesManagement = () => {
                   </div>
                 )}
 
-                {bus.supervisor?.user ? (
+                {bus.supervisor?.user? (
                   <div className="flex justify-between text-sm">
                     <span className="text-[#CFCFCF]">المشرف:</span>
                     <span className="text-white">{bus.supervisor.user.name}</span>
@@ -340,12 +340,23 @@ const BusModal = ({ bus, onClose, onSubmit, loading, error, supervisors }) => {
                   className="w-full px-4 py-3 bg-[#0B0B0B] border border-[#262626] rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand/50"
                 >
                   <option value="">لا يوجد مشرف</option>
-                  {supervisors.map((supervisor) => (
-                    <option key={supervisor.id} value={supervisor.userId}>
-                      {supervisor.user.name} - {supervisor.user.email}
-                    </option>
-                  ))}
+                  {supervisors.map((supervisor) => {
+                    const isAssignedElsewhere = Boolean(supervisor.bus && (!bus || supervisor.bus.id !== bus.id));
+                    return (
+                      <option
+                        key={supervisor.id}
+                        value={supervisor.userId}
+                        disabled={isAssignedElsewhere}
+                      >
+                        {supervisor.user.name} 
+                        {isAssignedElsewhere ? ' (مخصص لحافلة أخرى)' : ''}
+                      </option>
+                    );
+                  })}
                 </select>
+                {supervisors.some(s => s.bus) && (
+                  <p className="text-xs text-[#CFCFCF] mt-2">المشرفون المخصصون لحافلات أخرى يظهرون كغير متاحين.</p>
+                )}
               </div>
             </div>
 
